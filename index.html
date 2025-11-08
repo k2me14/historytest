@@ -1,173 +1,396 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中学受験 年号クイズ</title>
-<style>
-body {
-  font-family: "Arial Rounded MT Bold", "Helvetica Rounded", sans-serif;
-  background: linear-gradient(to bottom, #fff5b1, #ffd966);
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-#quiz-container {
-  width: 90%;
-  max-width: 600px;
-  margin-top: 50px;
-  text-align: center;
-}
-h1 {
-  font-size: 2em;
-  margin-bottom: 20px;
-}
-button.choice {
-  font-size: 1.6em;
-  font-weight: bold;
-  border-radius: 12px;
-  padding: 15px 25px;
-  margin: 10px 0;
-  width: 100%;
-  cursor: pointer;
-  background-color: #ffd966;
-  color: #333;
-  border: 2px solid #f4b400;
-  transition: all 0.2s;
-}
-button.choice:hover {
-  background-color: #ffe599;
-}
-button.choice.correct { background-color: #4CAF50; color: white; }
-button.choice.wrong { background-color: #f44336; color: white; }
-#result {
-  display: none;
-  margin-top: 20px;
-  text-align: left;
-}
-#result h2 {
-  font-size: 1.8em;
-  color: #333;
-}
-.mistake {
-  margin: 5px 0;
-  padding: 10px;
-  background: #fff8dc;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.explanation {
-  display: none;
-  padding: 5px;
-  background: #fff2b8;
-  border-radius: 5px;
-  margin-top: 3px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歴史学習のカクシン年号クイズ（150問）powered by Kenta with GenAI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(#cce7ff, #99ccff);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        #question {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .option {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .option:hover {
+            background-color: #0b7dda;
+        }
+        .correct {
+            background-color: #4CAF50 !important;
+        }
+        .wrong {
+            background-color: #f44336 !important;
+        }
+        #result {
+            display: none;
+        }
+        #result h2 {
+            margin-top: 0;
+        }
+        #mistakes {
+            margin-top: 20px;
+        }
+        .mistake {
+            margin-bottom: 15px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        #nextSet {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto 0;
+        }
+        #nextSet:hover {
+            background-color: #0b7dda;
+        }
+    </style>
 </head>
 <body>
-<div id="quiz-container">
-  <h1>中学受験 年号クイズ</h1>
-  <div id="question"></div>
-  <div id="choices">
-    <button class="choice" onclick="handleChoice(0)"></button>
-    <button class="choice" onclick="handleChoice(1)"></button>
-    <button class="choice" onclick="handleChoice(2)"></button>
-    <button class="choice" onclick="handleChoice(3)"></button>
-  </div>
-  <div id="result"></div>
-</div>
+    <div class="container">
+        <h1>中学受験向け年号クイズ</h1>
+        <div id="quiz">
+            <div id="question"></div>
+            <div class="options" id="options"></div>
+        </div>
+        <div id="result">
+            <h2>結果</h2>
+            <p id="accuracy"></p>
+            <p id="time"></p>
+            <div id="mistakes"></div>
+            <button id="nextSet">次の10問へ</button>
+        </div>
+    </div>
 
-<script>
-// --- サンプル問題（最初の10問、残りは同様に追加可能） ---
-const questions = [
-  {q:"明治維新は何年？", choices:[1867,1868,1870,1873], correct:1, explanation:"明治維新は1868年に始まった。"},
-  {q:"日清戦争は何年？", choices:[1894,1895,1896,1897], correct:0, explanation:"日清戦争は1894年に勃発。"},
-  {q:"日露戦争は何年？", choices:[1902,1903,1904,1905], correct:2, explanation:"日露戦争は1904年に開始。"},
-  {q:"関東大震災は何年？", choices:[1922,1923,1924,1925], correct:1, explanation:"関東大震災は1923年。"},
-  {q:"第一次世界大戦は何年？", choices:[1912,1914,1916,1918], correct:1, explanation:"第一次世界大戦は1914年から。"},
-  {q:"全国水平社設立は何年？", choices:[1922,1923,1924,1925], correct:2, explanation:"全国水平社は1924年に設立。"},
-  {q:"世界恐慌は何年？", choices:[1927,1928,1929,1930], correct:2, explanation:"世界恐慌は1929年から始まった。"},
-  {q:"治安維持法制定は何年？", choices:[1919,1924,1925,1926], correct:2, explanation:"治安維持法は1925年に成立。"},
-  {q:"ロシア革命は何年？", choices:[1916,1917,1918,1919], correct:1, explanation:"ロシア革命は1917年。"},
-  {q:"国際連盟設立は何年？", choices:[1918,1919,1920,1921], correct:2, explanation:"国際連盟は1920年に設立。"}
-  // 残り290問も同じ形式で追加可能
-];
+    <!-- 正解・不正解の音声 -->
+    <audio id="correctSound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" preload="auto"></audio>
+    <audio id="wrongSound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-399.mp3" preload="auto"></audio>
 
-let currentQuestionIndex = 0;
-let score = 0;
-let startTime = Date.now();
+    <script>
+        // 正解・不正解音
+        const correctSound = document.getElementById('correctSound');
+        const wrongSound = document.getElementById('wrongSound');
 
-function showQuestion(index){
-  const q = questions[index];
-  document.getElementById("question").innerText = `Q${index+1}: ${q.q}`;
-  const choiceButtons = document.querySelectorAll(".choice");
-  for(let i=0;i<4;i++){
-    choiceButtons[i].innerText = q.choices[i];
-    choiceButtons[i].className = "choice"; // リセット
-  }
-}
+        const questions = [
+            { event: "「漢委奴国王」と刻まれた金印を授かる", year: 57, commentary: "後漢の光武帝から邪馬台国の王に送られた金印。『後漢書』に記載があり、日本最古の金属製官印とされる。" },
+            { event: "卑弥呼が魏に使いを送る", year: 239, commentary: "『魏志倭人伝』に記された卑弥呼の朝貢。魏から「親魏倭王」の称号と銅鏡100枚などが与えられた。" },
+            { event: "日本に仏教が伝わる", year: 538, commentary: "百済の聖明王が欽明天皇に仏像・経論を送り、公式に仏教が伝来。蘇我氏が受容、物部氏が反対。" },
+            { event: "聖徳太子が摂政になる", year: 593, commentary: "推古天皇の摂政として政治を主導。十七条憲法や遣隋使派遣などを行った。" },
+            { event: "冠位十二階が制定される", year: 603, commentary: "聖徳太子が氏姓制度に代わる才能主義の官位制度を導入。徳・仁・礼・信・義・智の6色で12階級。" },
+            { event: "憲法十七条が制定される", year: 604, commentary: "聖徳太子が官僚の心構えを示した日本初の成文法。和を尊び、仏教・儒教の思想が基盤。" },
+            { event: "遣隋使を派遣する・法隆寺の建立", year: 607, commentary: "小野妹子を隋に派遣。法隆寺は聖徳太子と蘇我馬子が建立した世界最古の木造建築群。" },
+            { event: "犬上御田鍬を遣唐使として派遣する", year: 630, commentary: "唐の文化・制度を学ぶため派遣。帰国後、唐の律令制が日本に影響を与えた。" },
+            { event: "大化の改新が起こる", year: 645, commentary: "中大兄皇子と中臣鎌足が蘇我入鹿を暗殺。公地公民制・班田収授法の基礎が作られた。" },
+            { event: "白村江の戦いに日本が敗れる", year: 663, commentary: "百済復興のため唐・新羅連合と戦うが大敗。防人・水城が設置され、律令国家へ移行。" },
+            { event: "壬申の乱が起こる", year: 672, commentary: "大海人皇子（天武天皇）が大友皇子を破り勝利。日本史上最大の皇位継承争い。" },
+            { event: "藤原京に遷都する", year: 694, commentary: "持統天皇が日本初の本格的な都城を造営。唐の長安を模した条里制都市。" },
+            { event: "大宝律令が制定される", year: 701, commentary: "刑部親王らが編纂。日本初の成文律令で、律（刑法）・令（行政法）からなる。" },
+            { event: "和同開珎がつくられる", year: 708, commentary: "日本初の流通貨幣。銀銭で、銅銭の「開元通宝」を模倣。" },
+            { event: "平城京に遷都する", year: 710, commentary: "元明天皇が唐の長安をモデルにした条里制都城に遷都。奈良時代の中心。" },
+            { event: "太安万侶によって『古事記』がつくられる", year: 712, commentary: "天皇中心の神話・伝承をまとめた日本最古の歴史書。上中下3巻。" },
+            { event: "舎人親王により『日本書紀』がつくられる", year: 720, commentary: "漢文で編纂された公式歴史書。神代から持統天皇まで30巻。" },
+            { event: "三世一身法が制定される", year: 723, commentary: "開墾した田を3代まで私有を認める法。墾田永年私財法の前身。" },
+            { event: "全国に国分寺をつくる命令が出される", year: 741, commentary: "聖武天皇が盧遮那仏造立の詔と併せて発布。国家鎮護の仏教政策。" },
+            { event: "墾田永年私財法が制定される", year: 743, commentary: "開墾地を永代私有を認めた法。班田制が崩壊し、荘園が拡大。" },
+            { event: "鑑真が都に来日する", year: 754, commentary: "6回目の挑戦で来日。東大寺で戒律を授け、日本律宗の祖。" },
+            { event: "平安京に遷都する", year: 794, commentary: "桓武天皇が長岡京から遷都。平安時代の政治・文化の中心地。" },
+            { event: "最澄が天台宗を開く", year: 805, commentary: "比叡山延暦寺を拠点に天台宗を開宗。円・密・禅・戒の総合仏教。" },
+            { event: "空海が真言宗を開く", year: 806, commentary: "高野山金剛峯寺を根本道場に真言密教を広めた。東寺を拠点。" },
+            { event: "遣唐使が廃止される", year: 894, commentary: "菅原道真の建言により廃止。唐の衰退と日本独自文化の発展。" },
+            { event: "平将門の乱が起こる", year: 939, commentary: "関東で「新皇」を称し独立。藤原純友の乱と並ぶ地方豪族の反乱。" },
+            { event: "藤原純友の乱が起こる", year: 939, commentary: "瀬戸内で海賊行為を行い反乱。中央集権への抵抗。" },
+            { event: "藤原道長が摂政となり全盛を迎える", year: 1016, commentary: "「この世をば我が世とぞ思ふ」の和歌で知られる摂関政治の頂点。" },
+            { event: "東北地方で前九年の役が起こる", year: 1051, commentary: "源頼義が安倍氏を平定。12年間にわたる戦い。" },
+            { event: "東北地方で後三年の役が起こる", year: 1083, commentary: "源義家が清原氏の内紛を鎮圧。武士の台頭を示す。" },
+            { event: "白河上皇が院政を始める", year: 1086, commentary: "上皇が実権を握る院政の開始。摂関政治から院政へ移行。" },
+            { event: "保元の乱が起こる", year: 1156, commentary: "崇徳上皇派と後白河天皇派の皇位争い。武士の政治参加の契機。" },
+            { event: "平治の乱が起こる", year: 1159, commentary: "藤原信頼・信西対平清盛・源義朝。平氏政権の確立。" },
+            { event: "平清盛が太政大臣になる", year: 1167, commentary: "武士として初の太政大臣。日宋貿易で財を成す。" },
+            { event: "壇ノ浦の戦いで平氏が滅びる", year: 1185, commentary: "源義経が平氏を滅ぼす。源平合戦の終結。" },
+            { event: "源頼朝が征夷大将軍に任命される", year: 1192, commentary: "鎌倉幕府の成立。武家政権の始まり。" },
+            { event: "承久の乱が起こる", year: 1221, commentary: "後鳥羽上皇が鎌倉幕府打倒を企てるが失敗。皇室の政治的影響力低下。" },
+            { event: "北条泰時が御成敗式目を制定する", year: 1232, commentary: "武士のための成文法。貞永式目とも呼ばれる。" },
+            { event: "文永の役が起こる", year: 1274, commentary: "元（クビライ）が日本侵攻。神風で撃退。" },
+            { event: "弘安の役が起こる", year: 1281, commentary: "2度目の元寇。台風で元軍壊滅。神風伝説の起源。" },
+            { event: "永仁の徳政令が出される", year: 1297, commentary: "北条貞時が荘園整理と借金帳消しを命じたが失敗。" },
+            { event: "鎌倉幕府が滅亡する", year: 1333, commentary: "後醍醐天皇の建武の新政開始。足利尊氏が離反。" },
+            { event: "後醍醐天皇が建武の新政を始める", year: 1334, commentary: "天皇親政を目指すが、武士の不満を招く。" },
+            { event: "室町幕府が開かれる", year: 1338, commentary: "足利尊氏が征夷大将軍に。京都室町に幕府を置く。" },
+            { event: "足利義満により南北朝が合一される", year: 1392, commentary: "南朝が降伏し、明徳の和約。南北朝時代終結。" },
+            { event: "日明貿易が始められる", year: 1404, commentary: "勘合貿易。足利義満が「日本国王」として明と通交。" },
+            { event: "近江で正長の土一揆が起こる", year: 1428, commentary: "徳政を求める農民一揆。室町時代の社会不安。" },
+            { event: "応仁の乱が起こる", year: 1467, commentary: "将軍後継・守護大名争いから全国規模の内乱。戦国時代の始まり。" },
+            { event: "山城の国一揆が起こる", year: 1485, commentary: "農民・土豪が守護を追放し自治国家を樹立。" },
+            { event: "加賀の一向一揆が起こる", year: 1488, commentary: "浄土真宗門徒が守護富樫氏を滅ぼし100年間自治。" },
+            { event: "日本に鉄砲が伝わる", year: 1543, commentary: "種子島にポルトガル人が漂着。鉄砲製法が伝播。" },
+            { event: "日本にキリスト教が伝来する", year: 1549, commentary: "フランシスコ・ザビエルが鹿児島に来日。" },
+            { event: "桶狭間の戦いが起こる", year: 1560, commentary: "織田信長が今川義元を奇襲で破る。天下布武の第一歩。" },
+            { event: "室町幕府が滅亡する", year: 1573, commentary: "足利義昭が織田信長により追放され15代将軍が終わる。" },
+            { event: "長篠の戦いが起こる", year: 1575, commentary: "織田・徳川連合が武田勝頼を鉄砲三段撃ちで破る。" },
+            { event: "天正遣欧使節団の派遣・本能寺の変・山崎の戦い・太閤検地", year: 1582, commentary: "伊東マンショら4人がローマ教皇に謁見。本能寺で明智光秀が信長を討ち、羽柴秀吉が光秀を討つ。秀吉が全国の土地調査。" },
+            { event: "刀狩令が出される", year: 1588, commentary: "豊臣秀吉が農民から武器を没収。兵農分離を進める。" },
+            { event: "豊臣秀吉により全国統一される", year: 1590, commentary: "小田原征伐で北条氏を滅ぼし、全国平定。" },
+            { event: "文禄の役が起こる", year: 1592, commentary: "秀吉が朝鮮出兵。明との戦争に発展。" },
+            { event: "慶長の役が起こる", year: 1597, commentary: "2度目の朝鮮出兵。秀吉死去により撤兵。" },
+            { event: "関ヶ原の戦いが起こる", year: 1600, commentary: "徳川家康が石田三成を破り、覇権を確立。" },
+            { event: "江戸幕府が開かれる", year: 1603, commentary: "徳川家康が征夷大将軍に就任。江戸に幕府を開く。" },
+            { event: "武家諸法度・大阪夏の陣", year: 1615, commentary: "武家諸法度で大名統制。大阪夏の陣で豊臣氏滅亡。" },
+            { event: "スペイン船が来航禁止となる", year: 1624, commentary: "キリスト教禁教と鎖国政策の一環。" },
+            { event: "参勤交代が家光により制度化される", year: 1635, commentary: "大名に江戸滞在を義務付け、幕府支配を強化。" },
+            { event: "島原・天草一揆が起こる", year: 1637, commentary: "キリスト教農民の反乱。幕府が苛烈に鎮圧。" },
+            { event: "ポルトガル船が来航禁止となる", year: 1639, commentary: "鎖国令完成。オランダのみ長崎で貿易可。" },
+            { event: "オランダ商館が平戸から出島に移される", year: 1641, commentary: "出島の人工島で貿易管理。鎖国体制の象徴。" },
+            { event: "生類憐みの令を綱吉が制定する", year: 1685, commentary: "犬の殺生禁止など動物保護令。民衆の不満を招く。" },
+            { event: "新井白石が正徳の治を始める", year: 1709, commentary: "財政再建・貨幣改鋳など合理主義的政策。" },
+            { event: "徳川吉宗が享保の改革を始める", year: 1716, commentary: "新田開発・目安箱・小石川養生所など実学重視。" },
+            { event: "田沼意次が老中となる", year: 1772, commentary: "株仲間の公認・蝦夷地開発など商業重視政策。" },
+            { event: "杉田玄白が解体新書をつくる", year: 1774, commentary: "蘭学による日本初の西洋解剖書。蘭学の興隆。" },
+            { event: "天明の大ききんが起こる", year: 1782, commentary: "天明の大飢饉。東北で20万人以上が餓死。" },
+            { event: "松平定信が寛政の改革を始める", year: 1787, commentary: "倹約令・寛政異学の禁・囲米制度など。" },
+            { event: "ラクスマンが根室に来航する", year: 1792, commentary: "ロシア使節が通商を求めて来航。幕府は拒否。" },
+            { event: "フェートン号事件が起こる，間宮林蔵が樺太を探検する", year: 1808, commentary: "イギリス軍艦が長崎でオランダ旗を掲げて入港。間宮林蔵が樺太が島であることを確認。" },
+            { event: "異国船打払令が出される", year: 1825, commentary: "外国船を無条件で打ち払う命令。鎖国強化。" },
+            { event: "大塩平八郎の乱・モリソン号事件", year: 1837, commentary: "大塩が民衆救済を掲げ蜂起。アメリカ船モリソン号が打ち払われる。" },
+            { event: "アヘン戦争が起こる", year: 1840, commentary: "イギリスと清の戦争。清の敗北で不平等条約。" },
+            { event: "水野忠邦が天保の改革を始める", year: 1841, commentary: "人返し令・株仲間の解散・上知令など失敗。" },
+            { event: "ペリーが浦賀に来航する", year: 1853, commentary: "黒船来航。幕府に開国を迫る。" },
+            { event: "日米和親条約が結ばれる", year: 1854, commentary: "下田・函館開港。領事館設置は認めず。" },
+            { event: "日米修好通商条約・安政の大獄", year: 1858, commentary: "不平等条約。井伊直弼が尊王攘夷派を弾圧。" },
+            { event: "桜田門外の変が起こる", year: 1860, commentary: "水戸・薩摩藩士が井伊直弼を暗殺。" },
+            { event: "生麦事件が起こる", year: 1862, commentary: "薩摩藩士がイギリス人を殺傷。薩英戦争の原因。" },
+            { event: "薩英戦争が起こる", year: 1863, commentary: "イギリス艦隊が鹿児島を砲撃。薩摩が屈服。" },
+            { event: "薩長同盟が成立する", year: 1866, commentary: "坂本龍馬の仲介で薩摩・長州が同盟。倒幕へ。" },
+            { event: "大政奉還が行われる", year: 1867, commentary: "徳川慶喜が政権を朝廷に返上。" },
+            { event: "版籍奉還が行われる", year: 1869, commentary: "藩主が領地・人民を朝廷に返上。" },
+            { event: "廃藩置県・岩倉使節団が出発する", year: 1871, commentary: "全国を県に再編。岩倉具視ら欧米視察へ。" },
+            { event: "徴兵令・地租改正", year: 1873, commentary: "国民皆兵。地租3%から2.5%へ。農民一揆。" },
+            { event: "民選議院設立建白書が提出される", year: 1874, commentary: "板垣退助らが自由民権運動の開始。" },
+            { event: "日朝修好条規", year: 1876, commentary: "日本が朝鮮に不平等条約を強要。" },
+            { event: "西南戦争が起こる", year: 1877, commentary: "西郷隆盛率いる士族反乱。政府軍勝利。" },
+            { event: "国会開設の詔が出される", year: 1881, commentary: "明治天皇が1890年国会開設を約束。" },
+            { event: "秩父事件が起こる", year: 1884, commentary: "自由党激派と農民の債務帳消し要求の反乱。" },
+            { event: "内閣制度が創設される", year: 1885, commentary: "伊藤博文が初代内閣総理大臣。" },
+            { event: "ノルマントン号事件が起こる", year: 1886, commentary: "イギリス船の日本人乗客見捨て。治外法権問題化。" },
+            { event: "大日本帝国憲法が発布される", year: 1889, commentary: "明治憲法。天皇主権・議会は輔弼機関。" },
+            { event: "第1回帝国議会が開かれる", year: 1890, commentary: "衆議院で予算案否決。民党対藩閥の対立。" },
+            { event: "領事裁判権の廃止", year: 1894, commentary: "日英通商航海条約で1899年実施。" },
+            { event: "甲午農民戦争・日清戦争", year: 1894, commentary: "東学党の乱から日本出兵。下関条約で勝利。" },
+            { event: "下関条約・三国干渉", year: 1895, commentary: "遼東半島還付をロシア・独・仏が勧告。" },
+            { event: "八幡製鉄所が操業開始する", year: 1901, commentary: "日本初の官営製鉄所。近代工業の象徴。" },
+            { event: "日英同盟が結ばれる", year: 1902, commentary: "日本初の対等同盟。日露戦争の背景。" },
+            { event: "日露戦争が起こる", year: 1904, commentary: "遼東半島・韓国をめぐる戦争。日本勝利。" },
+            { event: "ポーツマス条約が結ばれる", year: 1905, commentary: "南樺太・旅順租借権獲得。日比谷焼き打ち事件。" },
+            { event: "伊藤博文が暗殺される", year: 1909, commentary: "安重根により哈爾濱で暗殺。韓国併合の前年。" },
+            { event: "韓国併合をする", year: 1910, commentary: "韓国を日本に併合。朝鮮総督府設置。" },
+            { event: "関税自主権が回復する", year: 1911, commentary: "不平等条約改正の成果。" },
+            { event: "第一次護憲運動が起こる", year: 1912, commentary: "桂太郎内閣打倒。尾崎幸雄らが主導。" },
+            { event: "第一次世界大戦が始まる", year: 1914, commentary: "日本は連合国側で参戦。青島攻略。" },
+            { event: "中国に二十一条の要求を突きつける", year: 1915, commentary: "袁世凱政府に山東権益・満州延長など要求。" },
+            { event: "ロシア革命が起こる", year: 1917, commentary: "ボリシェビキ革命。ソビエト政権樹立。" },
+            { event: "シベリア出兵 → 米騒動", year: 1918, commentary: "連合軍と出兵。国内で米価高騰で暴動。" },
+            { event: "原敬内閣の成立", year: 1918, commentary: "日本初の本格的政党内閣。普通選挙運動。" },
+            { event: "ベルサイユ条約", year: 1919, commentary: "山東権益獲得。国際連盟加盟。" },
+            { event: "二・一独立運動 / 五・四運動", year: 1919, commentary: "朝鮮で独立運動。中国で反日デモ。" },
+            { event: "国際連盟の発足・メーデー", year: 1920, commentary: "日本は常任理事国。初のメーデー開催。" },
+            { event: "全国水平社・日本農民組合の設立", year: 1922, commentary: "被差別部落解放運動と農民運動の開始。" },
+            { event: "普通選挙法・治安維持法", year: 1925, commentary: "25歳以上男子普通選挙。共産主義弾圧法。" },
+            { event: "ラジオ放送の開始", year: 1925, commentary: "東京放送局（現NHK）が日本初のラジオ放送。" },
+            { event: "世界恐慌が起こる", year: 1929, commentary: "ウォール街大暴落。日本も金解禁で打撃。" },
+            { event: "柳条湖事件 → 満州事変", year: 1931, commentary: "関東軍が南満州鉄道を爆破。満州占領。" },
+            { event: "盧溝橋事件 → 日中戦争", year: 1937, commentary: "北京近郊で日中軍衝突。全面戦争へ。" },
+            { event: "国家総動員法が定められる", year: 1938, commentary: "戦時統制経済。労働・資源動員。" },
+            { event: "第二次世界大戦が始まる", year: 1939, commentary: "ドイツのポーランド侵攻で開戦。" },
+            { event: "日独伊三国同盟・大政翼賛会", year: 1940, commentary: "軍事同盟。大政翼賛会で一国一党体制。" },
+            { event: "日ソ中立条約・太平洋戦争始まる", year: 1941, commentary: "4月に中立条約。12月に真珠湾攻撃。" },
+            { event: "ポツダム宣言受諾・終戦", year: 1945, commentary: "8月15日玉音放送。日本無条件降伏。" },
+            { event: "日本国憲法が公布される・農地改革", year: 1946, commentary: "11月3日公布。小作地を農民に解放。" },
+            { event: "日本国憲法施行・教育基本法制定", year: 1947, commentary: "5月3日施行。教育の民主化。" },
+            { event: "韓国・北朝鮮が成立", year: 1948, commentary: "南に大韓民国、北に朝鮮民主主義人民共和国。" },
+            { event: "湯川秀樹が初めてノーベル賞を受賞", year: 1949, commentary: "中間子理論で物理学賞。日本初のノーベル賞。" },
+            { event: "中華人民共和国が成立", year: 1949, commentary: "10月1日、毛沢東が北京で建国宣言。" },
+            { event: "朝鮮戦争が起こる・警察予備隊", year: 1950, commentary: "北朝鮮が南侵。警察予備隊（自衛隊の前身）創設。" },
+            { event: "サンフランシスコ平和条約", year: 1951, commentary: "連合国との講和条約。主権回復。" },
+            { event: "日米安全保障条約", year: 1960, commentary: "新安保条約。日米軍事同盟の確立。" },
+            { event: "第五福竜丸事件が起こる", year: 1954, commentary: "ビキニ環礁で被爆。反核運動の契機。" },
+            { event: "自衛隊の設立", year: 1954, commentary: "警察予備隊を自衛隊に改組。" },
+            { event: "アジア・アフリカ会議が開かれる", year: 1955, commentary: "バンドン会議。非同盟運動の母体。" },
+            { event: "日ソ共同宣言・日本が国際連合に加盟", year: 1956, commentary: "国交回復。12月18日国連加盟。" },
+            { event: "東海道新幹線・東京オリンピック", year: 1964, commentary: "新幹線開業。アジア初のオリンピック。" },
+            { event: "日韓基本条約が結ばれる", year: 1965, commentary: "日韓請求権協定。国交正常化。" },
+            { event: "札幌オリンピック・沖縄返還", year: 1972, commentary: "冬季五輪。5月15日沖縄施政権返還。" },
+            { event: "第四次中東戦争 → 石油危機", year: 1973, commentary: "オイルショック。日本経済に大打撃。" },
+            { event: "日中平和友好条約が結ばれる", year: 1978, commentary: "日中共同声明に続き平和条約。" },
+            { event: "東西ドイツが統一される", year: 1990, commentary: "10月3日、ドイツ連邦共和国に統一。" }
+        ];
 
-function handleChoice(selectedIndex){
-  const choiceButtons = document.querySelectorAll(".choice");
-  const q = questions[currentQuestionIndex];
+        let shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+        let currentSet = 0;
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let mistakes = [];
+        let startTime;
 
-  if(selectedIndex === q.correct){
-    choiceButtons[selectedIndex].classList.add("correct");
-    score++;
-  } else {
-    choiceButtons[selectedIndex].classList.add("wrong");
-  }
+        function startSet() {
+            if (currentSet >= 15) {
+                alert('全150問終了！お疲れ様でした！');
+                return;
+            }
+            currentQuestionIndex = currentSet * 10;
+            correctAnswers = 0;
+            mistakes = [];
+            startTime = new Date();
+            showQuestion();
+            document.getElementById('quiz').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+        }
 
-  // 0.8秒後に次の問題へ
-  setTimeout(()=>{
-    currentQuestionIndex++;
-    if(currentQuestionIndex % 10 === 0 || currentQuestionIndex === questions.length){
-      showResults();
-    } else {
-      showQuestion(currentQuestionIndex);
-    }
-  },800);
-}
+        function showQuestion() {
+            if (currentQuestionIndex >= (currentSet + 1) * 10) {
+                showResult();
+                return;
+            }
 
-function showResults(){
-  const resultDiv = document.getElementById("result");
-  const elapsed = Math.floor((Date.now()-startTime)/1000);
-  resultDiv.innerHTML = `<h2>10問ごとの結果</h2>
-    <p>正答率：${Math.round(score/currentQuestionIndex*100)}%</p>
-    <p>経過時間：${elapsed}秒</p>`;
-  
-  // 間違えた問題のみ解説
-  questions.slice(currentQuestionIndex-10,currentQuestionIndex).forEach((q,i)=>{
-    const correctIndex = q.correct;
-    const choice = q.choices[correctIndex];
-    const div = document.createElement("div");
-    div.className = "mistake";
-    div.innerText = `Q${currentQuestionIndex-10+i+1}: ${q.q} （正解: ${choice}）`;
-    const expl = document.createElement("div");
-    expl.className = "explanation";
-    expl.innerText = q.explanation;
-    div.onclick = ()=>{ expl.style.display = expl.style.display==="none"?"block":"none"; };
-    div.appendChild(expl);
-    if(questions[currentQuestionIndex-10+i].correct !== correctIndex){
-      resultDiv.appendChild(div);
-    }
-  });
+            const q = shuffledQuestions[currentQuestionIndex];
+            document.getElementById('question').textContent = `${currentQuestionIndex - currentSet * 10 + 1}/10: ${q.event}の年号は？`;
 
-  resultDiv.style.display = "block";
+            const options = generateOptions(q.year);
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
 
-  if(currentQuestionIndex<questions.length){
-    setTimeout(()=>{
-      showQuestion(currentQuestionIndex);
-      resultDiv.style.display = "none";
-    },2000);
-  }
-}
+            ['A', 'B', 'C', 'D'].forEach((label, index) => {
+                const btn = document.createElement('button');
+                btn.classList.add('option');
+                btn.textContent = `${label}: ${options[index]}`;
+                btn.onclick = () => handleAnswer(btn, options[index], q.year, q.commentary);
+                optionsContainer.appendChild(btn);
+            });
+        }
 
-// 初期表示
-showQuestion(currentQuestionIndex);
-</script>
+        function generateOptions(correctYear) {
+            const distractors = new Set();
+            while (distractors.size < 3) {
+                const offset = Math.floor(Math.random() * 10) + 1;
+                const sign = Math.random() < 0.5 ? -1 : 1;
+                const wrongYear = correctYear + sign * offset;
+                if (wrongYear > 0 && wrongYear < 3000) distractors.add(wrongYear);
+            }
+            const options = [correctYear, ...distractors];
+            return options.sort(() => Math.random() - 0.5);
+        }
+
+        function handleAnswer(selectedBtn, selectedYear, correctYear, commentary) {
+            const buttons = document.querySelectorAll('.option');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                const year = parseInt(btn.textContent.split(': ')[1]);
+                if (year === correctYear) {
+                    btn.classList.add('correct');
+                } else if (year === selectedYear) {
+                    btn.classList.add('wrong');
+                }
+            });
+
+            // 音を鳴らす
+            if (selectedYear === correctYear) {
+                correctSound.currentTime = 0;
+                correctSound.play().catch(() => {});
+                correctAnswers++;
+            } else {
+                wrongSound.currentTime = 0;
+                wrongSound.play().catch(() => {});
+                mistakes.push({
+                    event: shuffledQuestions[currentQuestionIndex].event,
+                    yourAnswer: selectedYear,
+                    correct: correctYear,
+                    commentary: commentary
+                });
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                showQuestion();
+            }, 1800);
+        }
+
+        function showResult() {
+            const endTime = new Date();
+            const timeTaken = Math.floor((endTime - startTime) / 1000);
+            const accuracy = (correctAnswers / 10 * 100).toFixed(0);
+
+            document.getElementById('quiz').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
+
+            document.getElementById('accuracy').textContent = `正答率: ${accuracy}%（${correctAnswers}/10）`;
+            document.getElementById('time').textContent = `経過時間: ${Math.floor(timeTaken / 60)}分${timeTaken % 60}秒`;
+
+            const mistakesContainer = document.getElementById('mistakes');
+            mistakesContainer.innerHTML = '<h3>間違えた問題</h3>';
+            if (mistakes.length === 0) {
+                mistakesContainer.innerHTML += '<p style="color:green;font-weight:bold;">全問正解！素晴らしい！</p>';
+            } else {
+                mistakes.forEach(m => {
+                    const div = document.createElement('div');
+                    div.classList.add('mistake');
+                    div.innerHTML = `
+                        <p><strong>出来事:</strong> ${m.event}</p>
+                        <p><strong>あなたの回答:</strong> ${m.yourAnswer}年</p>
+                        <p><strong>正解:</strong> ${m.correct}年</p>
+                        <p><strong>詳しい解説:</strong> ${m.commentary}</p>
+                    `;
+                    mistakesContainer.appendChild(div);
+                });
+            }
+        }
+
+        document.getElementById('nextSet').onclick = () => {
+            currentSet++;
+            startSet();
+        };
+
+        // 初期スタート
+        startSet();
+    </script>
 </body>
 </html>
