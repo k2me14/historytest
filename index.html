@@ -3,116 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>歴史学習のカクシン年号クイズ（150問）powered by Kenta with GenAI</title>
+    <title>歴史年号バトルRPG！150ステージ</title>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(#cce7ff, #99ccff);
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #87CEEB, #98D8C8);
             color: #333;
-            margin: 0;
-            padding: 20px;
+            min-height: 100vh;
+            padding: 15px;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
         }
         .container {
             max-width: 800px;
             width: 100%;
-            background: white;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
         }
-        h1, h2 {
+        h1 {
             text-align: center;
+            color: #D32F2F;
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            display: flex;
+            justify-content: space-around;
+            background: #FFF9C4;
+            padding: 10px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        #character {
+            text-align: center;
+            margin: 15px 0;
+        }
+        #charaImg {
+            font-size: 60px;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .bubble {
+            background: #fff;
+            border: 3px solid #333;
+            border-radius: 25px;
+            padding: 12px 18px;
+            display: inline-block;
+            max-width: 80%;
+            margin: 10px auto;
+            position: relative;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .bubble:after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            margin-left: -12px;
+            border: 12px solid transparent;
+            border-top-color: #fff;
         }
         #question {
-            font-size: 24px;
-            margin-bottom: 20px;
+            font-size: 22px;
             text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #1976D2;
         }
         .options {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 12px;
         }
         .option {
-            background-color: #2196F3;
+            background: #42A5F5;
             color: white;
             border: none;
-            border-radius: 10px;
-            padding: 20px;
-            font-size: 20px;
+            border-radius: 15px;
+            padding: 18px;
+            font-size: 18px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .option:hover {
-            background-color: #0b7dda;
-        }
-        .correct {
-            background-color: #4CAF50 !important;
-        }
-        .wrong {
-            background-color: #f44336 !important;
+        .option:hover { background: #1E88E5; transform: scale(1.05); }
+        .correct { background: #66BB6A !important; animation: pulse 0.5s; }
+        .wrong { background: #EF5350 !important; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
         #result {
             display: none;
+            text-align: center;
         }
-        #result h2 {
-            margin-top: 0;
-        }
-        #mistakes {
-            margin-top: 20px;
-        }
-        .mistake {
-            margin-bottom: 15px;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: #f9f9f9;
-        }
+        #coin { font-size: 20px; margin: 10px 0; }
         #nextSet {
-            background-color: #2196F3;
+            background: #FF9800;
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 15px;
             padding: 15px 30px;
-            font-size: 18px;
+            font-size: 20px;
             cursor: pointer;
+            margin: 20px auto;
             display: block;
-            margin: 20px auto 0;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        #nextSet:hover {
-            background-color: #0b7dda;
+        #nextSet:hover { background: #F57C00; transform: translateY(-2px); }
+        .mistake {
+            background: #FFEBEE;
+            border: 1px solid #FFCDD2;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 10px 0;
+            text-align: left;
         }
+        canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>歴史学習のカクシン年号クイズ（150問）powered by Kenta with GenA</h1>
+        <h1>歴史年号バトルRPG！150ステージ</h1>
+        
+        <div class="status">
+            <div><span id="level">Lv.1</span> 歴史見習い</div>
+            <div>コイン: <span id="coinCount">0</span></div>
+            <div>累計正解: <span id="totalCorrect">0</span></div>
+        </div>
+
+        <div id="character">
+            <div id="charaImg">⚔️</div>
+            <div class="bubble" id="speech">よし！年号バトル、始めるぞ！</div>
+        </div>
+
         <div id="quiz">
             <div id="question"></div>
             <div class="options" id="options"></div>
         </div>
+
         <div id="result">
-            <h2>結果</h2>
+            <h2>ステージクリア！</h2>
             <p id="accuracy"></p>
             <p id="time"></p>
+            <p id="coin"></p>
             <div id="mistakes"></div>
-            <button id="nextSet">次の10問へ</button>
+            <button id="nextSet">次のステージへ 年号バトル！</button>
         </div>
     </div>
 
-    <!-- 正解・不正解の音声 -->
+    <!-- 音声 -->
     <audio id="correctSound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" preload="auto"></audio>
     <audio id="wrongSound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-399.mp3" preload="auto"></audio>
 
     <script>
-        // 正解・不正解音
-        const correctSound = document.getElementById('correctSound');
-        const wrongSound = document.getElementById('wrongSound');
-
+        // === データ（150問フル） ===
         const questions = [
             { event: "「漢委奴国王」と刻まれた金印を授かる", year: 57, commentary: "後漢の光武帝から邪馬台国の王に送られた金印。『後漢書』に記載があり、日本最古の金属製官印とされる。" },
             { event: "卑弥呼が魏に使いを送る", year: 239, commentary: "『魏志倭人伝』に記された卑弥呼の朝貢。魏から「親魏倭王」の称号と銅鏡100枚などが与えられた。" },
@@ -265,16 +326,48 @@
             { event: "東西ドイツが統一される", year: 1990, commentary: "10月3日、ドイツ連邦共和国に統一。" }
         ];
 
+        // === キャラデータ ===
+        const characters = [
+            { img: "⚔️", line: "塵も積もれば山となる" },
+            { img: "👑", line: "君に解けるかな？" },
+            { img: "🔮", line: "やればできるよ" },
+            { img: "🏯", line: "最後まで諦めるな！" },
+            { img: "🐉", line: "You can do it!!" }
+        ];
+
+        // === 状態管理 ===
         let shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
-        let currentSet = 0;
+        let currentSet = parseInt(localStorage.getItem('currentSet') || '0');
         let currentQuestionIndex = 0;
         let correctAnswers = 0;
         let mistakes = [];
         let startTime;
+        let coins = parseInt(localStorage.getItem('historyCoins') || '0');
+        let totalCorrect = parseInt(localStorage.getItem('totalCorrect') || '0');
+
+        // === 初期表示 ===
+        updateStatus();
+        if (questions.length === 0) {
+            document.getElementById('question').textContent = '問題データ読み込みエラー。ページをリロードしてください。';
+        } else {
+            startSet();
+        }
+
+        // === 関数 ===
+        function updateStatus() {
+            const level = Math.floor(totalCorrect / 10) + 1;
+            const titles = ["見習い", "戦士", "武将", "大名", "征夷大将軍", "歴史王"];
+            document.getElementById('level').textContent = `Lv.${level}`;
+            document.getElementById('level').parentNode.children[0].textContent = titles[Math.min(level-1, 5)] || '歴史王';
+            document.getElementById('coinCount').textContent = coins;
+            document.getElementById('totalCorrect').textContent = totalCorrect;
+        }
 
         function startSet() {
             if (currentSet >= 15) {
-                alert('全150問終了！お疲れ様でした！');
+                alert('全150ステージクリア！\nあなたは「歴史王」になりました！');
+                localStorage.removeItem('currentSet');
+                location.reload();
                 return;
             }
             currentQuestionIndex = currentSet * 10;
@@ -284,6 +377,7 @@
             showQuestion();
             document.getElementById('quiz').style.display = 'block';
             document.getElementById('result').style.display = 'none';
+            localStorage.setItem('currentSet', currentSet);
         }
 
         function showQuestion() {
@@ -291,61 +385,59 @@
                 showResult();
                 return;
             }
-
             const q = shuffledQuestions[currentQuestionIndex];
+            const chara = characters[Math.floor(Math.random() * characters.length)];
+            document.getElementById('charaImg').textContent = chara.img;
+            document.getElementById('speech').textContent = chara.line;
             document.getElementById('question').textContent = `${currentQuestionIndex - currentSet * 10 + 1}/10: ${q.event}の年号は？`;
 
             const options = generateOptions(q.year);
-            const optionsContainer = document.getElementById('options');
-            optionsContainer.innerHTML = '';
-
-            ['A', 'B', 'C', 'D'].forEach((label, index) => {
+            const container = document.getElementById('options');
+            container.innerHTML = '';
+            ['A', 'B', 'C', 'D'].forEach((label, i) => {
                 const btn = document.createElement('button');
-                btn.classList.add('option');
-                btn.textContent = `${label}: ${options[index]}`;
-                btn.onclick = () => handleAnswer(btn, options[index], q.year, q.commentary);
-                optionsContainer.appendChild(btn);
+                btn.className = 'option';
+                btn.textContent = `${label}: ${options[i]}`;
+                btn.onclick = () => handleAnswer(btn, options[i], q.year, q.commentary);
+                container.appendChild(btn);
             });
         }
 
-        function generateOptions(correctYear) {
-            const distractors = new Set();
-            while (distractors.size < 3) {
+        function generateOptions(correct) {
+            const set = new Set([correct]);
+            while (set.size < 4) {
                 const offset = Math.floor(Math.random() * 10) + 1;
-                const sign = Math.random() < 0.5 ? -1 : 1;
-                const wrongYear = correctYear + sign * offset;
-                if (wrongYear > 0 && wrongYear < 3000) distractors.add(wrongYear);
+                const wrong = correct + (Math.random() < 0.5 ? -offset : offset);
+                if (wrong > 0 && wrong < 3000 && !set.has(wrong)) set.add(wrong);
             }
-            const options = [correctYear, ...distractors];
-            return options.sort(() => Math.random() - 0.5);
+            return [...set].sort(() => Math.random() - 0.5);
         }
 
-        function handleAnswer(selectedBtn, selectedYear, correctYear, commentary) {
+        function handleAnswer(btn, selected, correct, commentary) {
+            document.querySelectorAll('.option').forEach(b => b.disabled = true);
             const buttons = document.querySelectorAll('.option');
-            buttons.forEach(btn => {
-                btn.disabled = true;
-                const year = parseInt(btn.textContent.split(': ')[1]);
-                if (year === correctYear) {
-                    btn.classList.add('correct');
-                } else if (year === selectedYear) {
-                    btn.classList.add('wrong');
-                }
+            buttons.forEach(b => {
+                const y = parseInt(b.textContent.split(': ')[1]);
+                if (y === correct) b.classList.add('correct');
+                else if (y === selected) b.classList.add('wrong');
             });
 
-            // 音を鳴らす
-            if (selectedYear === correctYear) {
-                correctSound.currentTime = 0;
-                correctSound.play().catch(() => {});
+            const correctAudio = document.getElementById('correctSound');
+            const wrongAudio = document.getElementById('wrongSound');
+            if (selected == correct) {
+                correctAudio.currentTime = 0;
+                correctAudio.play().catch(e => console.log('音声再生エラー:', e));
                 correctAnswers++;
+                coins++;
+                totalCorrect++;
+                localStorage.setItem('historyCoins', coins);
+                localStorage.setItem('totalCorrect', totalCorrect);
+                updateStatus();
+                celebrate();
             } else {
-                wrongSound.currentTime = 0;
-                wrongSound.play().catch(() => {});
-                mistakes.push({
-                    event: shuffledQuestions[currentQuestionIndex].event,
-                    yourAnswer: selectedYear,
-                    correct: correctYear,
-                    commentary: commentary
-                });
+                wrongAudio.currentTime = 0;
+                wrongAudio.play().catch(e => console.log('音声再生エラー:', e));
+                mistakes.push({ event: shuffledQuestions[currentQuestionIndex].event, yourAnswer: selected, correct, commentary });
             }
 
             setTimeout(() => {
@@ -354,43 +446,81 @@
             }, 1800);
         }
 
+        function celebrate() {
+            const canvas = document.createElement('canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.style.cssText = 'position:fixed;top:0;left:0;pointer-events:none;z-index:1000;';
+            document.body.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+
+            let particles = 40;
+            const interval = setInterval(() => {
+                if (particles <= 0) {
+                    clearInterval(interval);
+                    setTimeout(() => canvas.remove(), 500);
+                    return;
+                }
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const hue = Math.random() * 360;
+                ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                ctx.beginPath();
+                ctx.arc(x, y, Math.random() * 6 + 2, 0, Math.PI * 2);
+                ctx.fill();
+                particles--;
+            }, 30);
+        }
+
         function showResult() {
-            const endTime = new Date();
-            const timeTaken = Math.floor((endTime - startTime) / 1000);
+            const timeTaken = Math.floor((new Date() - startTime) / 1000);
             const accuracy = (correctAnswers / 10 * 100).toFixed(0);
+            const gained = correctAnswers;
 
             document.getElementById('quiz').style.display = 'none';
             document.getElementById('result').style.display = 'block';
+            document.getElementById('accuracy').textContent = `正解率: ${accuracy}%（${correctAnswers}/10）`;
+            document.getElementById('time').textContent = `時間: ${Math.floor(timeTaken / 60)}分${timeTaken % 60}秒`;
+            document.getElementById('coin').textContent = `+${gained}コインゲット！（合計: ${coins}）`;
 
-            document.getElementById('accuracy').textContent = `正答率: ${accuracy}%（${correctAnswers}/10）`;
-            document.getElementById('time').textContent = `経過時間: ${Math.floor(timeTaken / 60)}分${timeTaken % 60}秒`;
-
-            const mistakesContainer = document.getElementById('mistakes');
-            mistakesContainer.innerHTML = '<h3>間違えた問題</h3>';
+            const mistakesDiv = document.getElementById('mistakes');
+            mistakesDiv.innerHTML = '<h3>間違えた問題</h3>';
             if (mistakes.length === 0) {
-                mistakesContainer.innerHTML += '<p style="color:green;font-weight:bold;">全問正解！素晴らしい！</p>';
+                mistakesDiv.innerHTML += '<p style="color:#4CAF50;font-weight:bold;">全問正解！すごい！</p>';
+                if (accuracy == 100) {
+                    setTimeout(() => {
+                        const name = prompt("全問正解！歴史王に名前を刻もう！", "名無し");
+                        if (name && name.trim()) saveRanking(name.trim(), accuracy, timeTaken);
+                    }, 500);
+                }
             } else {
                 mistakes.forEach(m => {
                     const div = document.createElement('div');
-                    div.classList.add('mistake');
+                    div.className = 'mistake';
                     div.innerHTML = `
                         <p><strong>出来事:</strong> ${m.event}</p>
                         <p><strong>あなたの回答:</strong> ${m.yourAnswer}年</p>
                         <p><strong>正解:</strong> ${m.correct}年</p>
-                        <p><strong>詳しい解説:</strong> ${m.commentary}</p>
+                        <p><strong>解説:</strong> ${m.commentary}</p>
                     `;
-                    mistakesContainer.appendChild(div);
+                    mistakesDiv.appendChild(div);
                 });
             }
+            updateStatus();
+        }
+
+        function saveRanking(name, score, time) {
+            let rankings = JSON.parse(localStorage.getItem('historyRanking') || '[]');
+            rankings.push({ name, score: parseInt(score), time, date: new Date().toLocaleDateString() });
+            rankings.sort((a, b) => b.score - a.score || a.time - b.time);
+            localStorage.setItem('historyRanking', JSON.stringify(rankings.slice(0, 5)));
+            alert(`ランキング登録完了！\n${name} さん: ${score}% / ${time}秒`);
         }
 
         document.getElementById('nextSet').onclick = () => {
             currentSet++;
             startSet();
         };
-
-        // 初期スタート
-        startSet();
     </script>
 </body>
 </html>
