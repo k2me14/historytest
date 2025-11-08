@@ -1,1 +1,319 @@
-test
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>中学受験 年号クイズ（4択・解説付き）</title>
+  <style>
+    :root{--bg:#f7fbff;--card:#ffffff;--accent:#1565c0}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); margin:0; padding:24px; color:#222}
+    .wrap{max-width:960px;margin:0 auto}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    h1{font-size:20px;margin:0}
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 20px rgba(20,30,60,0.06)}
+    .question{font-size:18px;margin:12px 0}
+    .controls{display:flex;gap:8px;margin-top:12px}
+    button{background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
+    button.secondary{background:#eee;color:#222}
+    footer{margin-top:18px;font-size:13px;color:#555}
+    .stats{display:flex;gap:12px;align-items:center;margin-top:12px}
+    .progress{height:10px;background:#eee;border-radius:99px;overflow:hidden;width:100%}
+    .bar{height:100%;background:linear-gradient(90deg,#70b5ff,#1e88e5);width:0%}
+    .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .choice{padding:12px;border-radius:10px;border:1px solid #ddd;cursor:pointer;background:#fafafa}
+    .choice.selected{outline:3px solid rgba(21,101,192,0.12);background:#eef6ff}
+    .small{font-size:13px;color:#666}
+    .hidden{display:none}
+    .fold{background:#fff; border:1px solid #eee; border-radius:8px; padding:8px; margin-top:8px}
+    .toggle{background:none;border:none;color:var(--accent);cursor:pointer;font-weight:600}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>中学受験向け 年号クイズ（4択・解説は10問ごとに表示）</h1>
+    </header>
+
+    <div class="card" id="quizCard">
+      <div class="meta small">問題数：<span id="totalCount">300</span>　•　10問ごとに間違えた問題の解説（折りたたみ）を表示します</div>
+
+      <div id="questionArea">
+        <div class="question" id="qText">読み込み中...</div>
+
+        <div id="choices" class="choices"></div>
+
+        <div class="controls">
+          <button id="submitBtn" disabled>回答を提出</button>
+          <button class="secondary" id="skipBtn">スキップ</button>
+        </div>
+
+        <div class="stats">
+          <div>問題 <span id="currentIndex">0</span> / <span id="total">0</span></div>
+          <div style="flex:1">
+            <div class="progress"><div class="bar" id="progressBar"></div></div>
+          </div>
+          <div class="small">正答率 <span id="accuracy">0%</span></div>
+        </div>
+
+      </div>
+
+      <div id="batchResult" class="hidden card" style="margin-top:16px;padding:12px;background:#fff8e1;border:1px solid #ffe08a">
+        <strong>10問のまとめ</strong>
+        <div id="batchStats" class="small" style="margin-top:6px"></div>
+        <div id="wrongList" style="margin-top:12px"></div>
+        <div style="margin-top:8px">
+          <button id="continueBtn">次の10問へ</button>
+        </div>
+      </div>
+
+      <div id="finalResult" class="hidden" style="margin-top:16px">
+        <h3>最終結果</h3>
+        <div id="finalStats" class="small"></div>
+        <div style="margin-top:8px"><button id="restartBtn">最初から</button> <button id="downloadBtn" class="secondary">CSVで結果をダウンロード</button></div>
+        <div id="detailed" style="margin-top:10px"></div>
+      </div>
+
+    </div>
+
+    <footer class="small">問題データ（seed 30問）は世界史文脈を含む解説付き。残りは練習問題です。必要なら問題差し替え・追加できます。</footer>
+  </div>
+
+  <script>
+    // --- seed 30 問（それぞれ hint: 世界史文脈を含む100〜200字の解説）
+    const seedQuestions = [
+      {text: 'ペリーが黒船で来航した年（米艦隊が浦賀に来た年）', answer: 1853, hint: '19世紀中頃の米国は工業と海軍力を背景にアジア市場と補給地を求めていた。黒船来航は日本の鎖国を揺るがし、翌年の日米和親条約へとつながって幕府の外交失敗が国内政治の分裂を促し、最終的に明治維新へと続く国際的・国内的転換点となった。'},
+      {text: '江戸幕府が成立した年（徳川家康が征夷大将軍となった年）', answer: 1603, hint: '関ヶ原の戦い（1600）で徳川氏が全国的な実権を握り、1603年に徳川家康が征夷大将軍となって武家政権を確立した。約260年間続く江戸時代の行政と社会秩序の基盤がこの年に固まった。'},
+      {text: '明治維新（王政復古と近代化の端緒）が起きた年（明治元年）', answer: 1868, hint: '幕末の海外圧力と国内の攘夷・開国論争を経て、1868年の王政復古により天皇中心の政治が復活した。これが廃藩置県や近代国家形成の出発点となり、急速な西欧化・中央集権化を進める契機になった。'},
+      {text: '第二次世界大戦が終わった年（日本の降伏）', answer: 1945, hint: '第二次大戦はヨーロッパと太平洋での総力戦となり、1945年に連合国の勝利で終結した。日本は原爆投下とソ連参戦の結果、8月に降伏文書に調印し、アジア太平洋地域の秩序が大きく変わった年である。'},
+      {text: '関東大震災が起きた年', answer: 1923, hint: '1923年9月、関東大震災が首都圏を直撃し甚大な被害を出した。戦後復興と都市計画の重要性を浮き彫りにし、社会的不安と政治的対立が激化する一因ともなった。国際的には第一次世界大戦後の不安定な時期にあたる。'},
+      {text: '日清戦争が始まった年（清との戦い）', answer: 1894, hint: '朝鮮半島をめぐる対立は19世紀末に東アジアの力関係を変えた。1894年の日清戦争で日本が勝利すると、下関条約で賠償と領土的利益を得て、列強としての地位を高める契機となった。'},
+      {text: '日露戦争が始まった年', answer: 1904, hint: '帝政ロシアと日本は満洲・朝鮮半島での利権を巡って対立し、1904年に日露戦争が勃発。日本の勝利はアジアの勢力図を大きく変え、非欧米国として初めて列強に伍した象徴的事例となった。'},
+      {text: '大化の改新（中大兄皇子らによる中央集権化の始まり）', answer: 645, hint: '7世紀中頃の大化の改新は、蘇我氏の権力を排して律令体制への移行を促した一連の改革である。中国大陸の制度を参照しながら中央集権化を進め、日本古代国家の骨格を形成した歴史的重要事件である。'},
+      {text: '壇ノ浦の戦いで平家が滅んだ年', answer: 1185, hint: '源平合戦の決着である壇ノ浦の戦い（1185）は、平氏の滅亡と武家政権の成立へつながった。これ以後、鎌倉幕府へと政治の主導権が移り、日本の中世封建制度の基礎が築かれた。'},
+      {text: '鎌倉幕府が成立した年（源頼朝が征夷大将軍に就任）', answer: 1192, hint: '源頼朝は武士の政権を確立し1192年に征夷大将軍となった。以後、武家政権が朝廷と並ぶ実権を握る体制が成立し、封建的な社会構造と軍事的支配が定着した。'},
+      {text: '織田信長が桶狭間で今川義元を破った年', answer: 1560, hint: '戦国時代の局面を変えた桶狭間の戦いで織田信長が勝利し、以後尾張・美濃を拠点に勢力を拡大した。地方の戦国大名が中央を動かす時代へと進み、天下統一への足掛かりとなった。'},
+      {text: '豊臣秀吉が全国統一をほぼ成し遂げた年（小田原征伐）', answer: 1590, hint: '1590年の小田原征伐で秀吉は関東の北条氏を降伏させ、全国的な支配を確立した。全国土地制度や検地などの施策が進み、統一国家化がさらに進行した。'},
+      {text: 'ペスト（黒死病）がヨーロッパで大流行した年（14世紀）', answer: 1347, hint: '14世紀中葉のペスト流行はヨーロッパで甚大な人口減少を引き起こし、社会経済構造の変化を促した。封建制の揺らぎや都市の台頭、労働力不足が長期的な歴史変動を生んだ。'},
+      {text: 'アメリカ独立宣言が出された年', answer: 1776, hint: '18世紀の啓蒙思想と植民地政策への反発が結びつき、1776年に北米13植民地が独立宣言を発した。近代的な国家観と市民権の理念が広がる契機となり、世界各地の政治変動に影響を与えた。'},
+      {text: 'フランス革命が始まった年（バスティーユ襲撃）', answer: 1789, hint: '1789年のバスティーユ襲撃に代表されるフランス革命は、封建的特権の廃止と市民社会の台頭をもたらし、近代ヨーロッパの政治原理である国民主権や人権思想を広めた。'},
+      {text: 'ロシア革命（十月革命）が起きた年', answer: 1917, hint: '第一次大戦の疲弊と社会不満が高まる中で1917年、二月革命・十月革命が起き、帝政ロシアが倒れた。ボリシェヴィキ政権の成立は世界の政治思想と国際関係に大きな影響を与えた。'},
+      {text: '第一次世界大戦が始まった年', answer: 1914, hint: '1914年に起きたサラエボ事件を契機に列強間の同盟関係が戦争へ発展し、ヨーロッパ中心の大規模な総力戦が開始された。戦後の国際秩序や国際連盟創設につながる大きな転換点である。'},
+      {text: '国際連盟が設立された年', answer: 1920, hint: '第一次大戦の反省から国際協調を目指して1920年に国際連盟が設立された。しかし大国の不参加や実効性の限界があり、第二次大戦の抑止には至らなかった点が重要である。'},
+      {text: 'アメリカで南北戦争が始まった年', answer: 1861, hint: '奴隷制度をめぐる対立が深まり、1861年に南北戦争が勃発した。戦争は中央政府の権威と市民権の概念を強化し、産業資本主義への移行を促す歴史的出来事であった。'},
+      {text: '朝鮮が日本に併合された年（韓国併合）', answer: 1910, hint: '日本は19世紀末から朝鮮半島での影響力を強め、1910年に韓国併合を実施した。植民地支配は地域の近代化と同時に抑圧と反発を生み、20世紀の東アジア情勢に深い影響を残した。'},
+      {text: '日本で大日本帝国憲法が発布された年', answer: 1889, hint: '1889年の大日本帝国憲法は西欧憲法を参照して天皇制下の立憲体制を定めた。近代国家としての法制度整備を進める一方、統帥権などの特有の制度は後の政治過程に影響した。'},
+      {text: '昭和（裕仁）が即位した年（昭和元年）', answer: 1926, hint: '1926年に昭和天皇が即位し、昭和時代が始まった。内外の政治変動と経済問題、やがての軍国主義台頭の時代背景を持つ時代区分の起点となる。'},
+      {text: '東京オリンピック（戦後初の東京開催）が開かれた年', answer: 1964, hint: '1964年の東京オリンピックは戦後日本の復興と経済成長を世界に示す機会となった。インフラ整備や高度経済成長の象徴であり、日本の国際復帰を象徴する出来事である。'},
+      {text: 'ベルリンの壁が崩壊した年（東西冷戦の転換）', answer: 1989, hint: '1989年のベルリンの壁崩壊は冷戦構造の崩壊を象徴し、東欧での民主化とソ連圏の再編を加速した。国際秩序の大きな変化をもたらし、世界政治の地殻変動となった。'},
+      {text: '日本でバブル経済の崩壊が始まった年（90年代初頭）', answer: 1991, hint: '1980年代後半の資産価格高騰が頂点に達し、1991年頃からバブル崩壊が明確化した。金融機関の不良債権問題や経済停滞が長期化し、1990年代の「失われた10年」へと続いた。'},
+      {text: '太平洋戦争が始まった年（日本の真珠湾攻撃）', answer: 1941, hint: '1941年の真珠湾攻撃は日本の対米戦争参戦の端緒であり、太平洋全域を戦場とする大規模紛争に発展した。戦後の東アジアの再編と国際秩序に深刻な影響を与えた。'},
+      {text: '壬申の乱が起きた年（飛鳥時代の皇位継承争い）', answer: 672, hint: '672年の壬申の乱は皇位継承を巡る大きな内乱であり、勝利した側の統制が強化されることで古代国家の中央集権化が進む契機となった。古代国家形成過程の重要な事件である。'},
+      {text: '遣隋使が始まったとされる年（推定）', answer: 607, hint: '6〜7世紀にかけて日本は中国大陸との交流を深め、607年頃に遣隋使を派遣したとされる。中国の制度・文化を学ぶことで日本の律令国家形成に影響を与えた。'},
+      {text: '聖徳太子が十七条憲法を制定したと伝えられる年', answer: 604, hint: '聖徳太子による十七条憲法は、中央集権的な統治と官僚倫理を重視した教えを示す伝承的文書である。中国文化の影響を受けた政治理念の導入を示す重要な出来事とされる。'},
+      {text: '江戸時代に事実上の鎖国が完成したとされる年（鎖国関連法の整備）', answer: 1639, hint: '17世紀に入って江戸幕府は海外との接触を厳しく制限し、1639年頃にポルトガル人の排除や鎖国体制が強化された。対外関係を限定することで国内の安定と統制が図られた。'}
+    ];
+
+    // --- 生成問題で合計300問にする ---
+    const totalRequested = 300;
+    const generated = [];
+    let nextYear = 700;
+    while (seedQuestions.length + generated.length < totalRequested) {
+      generated.push({text: `練習問題：西暦 ${nextYear} 年に関する年号問題`, answer: nextYear, hint: '練習用：年号の数字感覚を養う問題です。'});
+      nextYear += Math.floor(Math.random()*8)+1;
+    }
+
+    const allQuestions = [...seedQuestions, ...generated].slice(0, totalRequested);
+
+    // --- 状態 ---
+    const total = allQuestions.length;
+    document.getElementById('total').textContent = total;
+    document.getElementById('totalCount').textContent = total;
+
+    let index = 0; // 0-based
+    let batchStartIndex = 0;
+    const results = []; // {qIndex, selected, correct, correctAnswer, time, choices}
+    let questionStartTime = null;
+    let quizStartTime = Date.now();
+    let selectedChoice = null;
+
+    // ユーティリティ
+    function shuffle(arr){
+      for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;
+    }
+
+    function makeChoices(correctYear){
+      // D1: 正解年 ±(1〜7) 年の範囲で3つ生成（重複回避）
+      const distractors = new Set();
+      while (distractors.size < 3) {
+        const delta = Math.floor(Math.random()*7)+1; //1..7
+        const sign = Math.random() < 0.5 ? -1 : 1;
+        const val = correctYear + sign*delta;
+        if (val !== correctYear) distractors.add(val);
+      }
+      const arr = [correctYear, ...Array.from(distractors)];
+      return shuffle(arr);
+    }
+
+    function renderChoices(choices){
+      const container = document.getElementById('choices');
+      container.innerHTML = '';
+      selectedChoice = null;
+      document.getElementById('submitBtn').disabled = true;
+      choices.forEach((c, idx) => {
+        const div = document.createElement('div');
+        div.className = 'choice';
+        div.tabIndex = 0;
+        div.dataset.value = c;
+        div.innerHTML = `<strong>${String.fromCharCode(65+idx)}.</strong> ${c}`;
+        div.addEventListener('click', ()=>{
+          document.querySelectorAll('.choice').forEach(el=>el.classList.remove('selected'));
+          div.classList.add('selected');
+          selectedChoice = c;
+          document.getElementById('submitBtn').disabled = false;
+        });
+        div.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){div.click();} });
+        container.appendChild(div);
+      });
+    }
+
+    function showQuestion(){
+      if (index >= total) { showFinal(); return; }
+      const q = allQuestions[index];
+      document.getElementById('qText').textContent = `${index+1}. ${q.text}`;
+      document.getElementById('currentIndex').textContent = index+1;
+      const pct = Math.round((index/total)*100);
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('accuracy').textContent = calcAccuracy() + '%';
+      const choices = makeChoices(q.answer);
+      renderChoices(choices);
+      questionStartTime = Date.now();
+    }
+
+    function calcAccuracy(){
+      if (!results.length) return 0;
+      const c = results.filter(r=>r.correct).length;
+      return Math.round((c/results.length)*100);
+    }
+
+    function submitAnswer(){
+      if (index >= total) return;
+      const elapsed = Math.round((Date.now() - questionStartTime)/1000);
+      const q = allQuestions[index];
+      const selected = selectedChoice;
+      const correct = (selected === q.answer);
+      // capture displayed choices for CSV/debug
+      const displayedChoices = Array.from(document.querySelectorAll('.choice')).map(el=>Number(el.dataset.value));
+      results.push({qIndex:index, selected, correct, correctAnswer: q.answer, time: elapsed, text: q.text, choices: displayedChoices, hint: q.hint});
+      index++;
+      // 10問ごと
+      if ((index - batchStartIndex) >= 10 || index >= total) {
+        showBatchResult();
+      } else {
+        showQuestion();
+      }
+    }
+
+    function skipQuestion(){
+      if (index >= total) return;
+      const elapsed = Math.round((Date.now() - questionStartTime)/1000);
+      const q = allQuestions[index];
+      const displayedChoices = Array.from(document.querySelectorAll('.choice')).map(el=>Number(el.dataset.value));
+      results.push({qIndex:index, selected: null, correct: false, correctAnswer: q.answer, time: elapsed, text: q.text, choices: displayedChoices, hint: q.hint});
+      index++;
+      if ((index - batchStartIndex) >= 10 || index >= total) {
+        showBatchResult();
+      } else {
+        showQuestion();
+      }
+    }
+
+    function showBatchResult(){
+      const batch = results.slice(batchStartIndex, index);
+      const correctCount = batch.filter(b=>b.correct).length;
+      const totalTime = batch.reduce((s,b)=>s+b.time,0);
+      const accuracy = Math.round((correctCount / batch.length) * 100);
+      document.getElementById('batchStats').textContent = `この10問の正答： ${correctCount} / ${batch.length} （${accuracy}%）　・　合計所要時間： ${totalTime} 秒`;
+      // 間違えた問題の折りたたみリスト
+      const wrong = batch.filter(b=>!b.correct);
+      const listDiv = document.getElementById('wrongList');
+      listDiv.innerHTML = '';
+      if (wrong.length === 0) {
+        listDiv.innerHTML = '<div class="small">すべて正解でした。おめでとう！</div>';
+      } else {
+        wrong.forEach((w, i)=>{
+          const wrap = document.createElement('div');
+          wrap.className = 'fold';
+          const qno = w.qIndex+1;
+          const header = document.createElement('div');
+          header.innerHTML = `<strong>${qno}. ${w.text}</strong>　あなたの回答：${w.selected===null?'<span class="small">スキップ</span>':w.selected}　正解：${w.correctAnswer}`;
+          const btn = document.createElement('button');
+          btn.className = 'toggle';
+          btn.textContent = '解説を表示';
+          const hintDiv = document.createElement('div');
+          hintDiv.className = 'small hidden';
+          hintDiv.style.marginTop = '8px';
+          hintDiv.textContent = w.hint || '解説なし';
+          btn.addEventListener('click', ()=>{
+            const showing = !hintDiv.classList.contains('hidden');
+            if (showing) { hintDiv.classList.add('hidden'); btn.textContent = '解説を表示'; }
+            else { hintDiv.classList.remove('hidden'); btn.textContent = '解説を隠す'; }
+          });
+          wrap.appendChild(header);
+          wrap.appendChild(btn);
+          wrap.appendChild(hintDiv);
+          listDiv.appendChild(wrap);
+        });
+      }
+
+      document.getElementById('batchResult').classList.remove('hidden');
+      document.getElementById('questionArea').classList.add('hidden');
+    }
+
+    function continueAfterBatch(){
+      batchStartIndex = index;
+      document.getElementById('batchResult').classList.add('hidden');
+      document.getElementById('questionArea').classList.remove('hidden');
+      if (index >= total) { showFinal(); } else { showQuestion(); }
+    }
+
+    function showFinal(){
+      document.getElementById('quizCard').classList.add('hidden');
+      document.getElementById('finalResult').classList.remove('hidden');
+      const totalCorrect = results.filter(r=>r.correct).length;
+      const totalTime = Math.round((Date.now() - quizStartTime)/1000);
+      const accuracy = Math.round((totalCorrect / results.length) * 100);
+      document.getElementById('finalStats').textContent = `全 ${results.length} 問中 ${totalCorrect} 問 正解（正答率 ${accuracy}%）・ 合計所要時間 ${totalTime} 秒`;
+      const rows = results.map(r=>`<tr><td>${r.qIndex+1}</td><td>${r.text}</td><td>${r.selected===null?'<span class="small">スキップ</span>':r.selected}</td><td>${r.correct?'<strong>○</strong>':'×'}</td><td>${r.correctAnswer}</td><td class="small">${r.time}s</td></tr>`).join('');
+      document.getElementById('detailed').innerHTML = `<div class="card"><table><thead><tr><th>No</th><th>問題</th><th>回答</th><th>判定</th><th>正解</th><th>所要</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    }
+
+    function restart(){ location.reload(); }
+
+    function downloadCSV(){
+      const header = ['No','問題','選択肢A','選択肢B','選択肢C','選択肢D','回答','判定','正解','所要秒'];
+      const lines = [header.join(',')];
+      for (const r of results){
+        const choices = (r.choices||[]).map(c=>`"${c}"`);
+        const row = [r.qIndex+1, `"${r.text.replace(/"/g,'""')}"`, choices[0]||'', choices[1]||'', choices[2]||'', choices[3]||'', r.selected===null?'':r.selected, r.correct? 'OK':'NG', r.correctAnswer, r.time];
+        lines.push(row.join(','));
+      }
+      const blob = new Blob([lines.join('\n')],{type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'nengou_quiz_results.csv'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    // --- イベント ---
+    document.getElementById('submitBtn').addEventListener('click', ()=>submitAnswer());
+    document.getElementById('skipBtn').addEventListener('click', ()=>skipQuestion());
+    document.getElementById('continueBtn').addEventListener('click', ()=>continueAfterBatch());
+    document.getElementById('restartBtn').addEventListener('click', ()=>restart());
+    document.getElementById('downloadBtn').addEventListener('click', ()=>downloadCSV());
+
+    // 初期表示
+    quizStartTime = Date.now();
+    showQuestion();
+  </script>
+</body>
+</html>
