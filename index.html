@@ -201,9 +201,11 @@
         </div>
         <button id="resetBtn">スコアリセット</button>
     </div>
-    <!-- 音声 -->
-    <audio id="correctSound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" preload="auto"></audio>
-    <audio id="wrongSound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-399.mp3" preload="auto"></audio>
+	<!-- ローカル音声ファイル（同じフォルダに置く！） -->
+	<audio id="correctSound" src="correct.mp3" preload="auto"></audio>
+	<audio id="wrongSound" src="wrong.mp3" preload="auto"></audio>
+	<audio id="gachaSound" src="gacha.mp3" preload="auto"></audio>
+	<audio id="legendarySound" src="legendary.mp3" preload="auto"></audio>
     <script>
         // === データ（150問フル） ===
         const questions = [
