@@ -127,6 +127,40 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         #nextSet:hover { background: #F57C00; transform: translateY(-2px); }
+        #gachaBtn {
+            background: #9C27B0;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            font-size: 20px;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        #gachaBtn:hover { background: #7B1FA2; transform: translateY(-2px); }
+        #gachaBtn:disabled { background: #ccc; cursor: not-allowed; }
+        #gachaResult {
+            font-size: 24px;
+            margin: 20px 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        #resetBtn {
+            background: #F44336;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px auto;
+            display: block;
+            font-weight: bold;
+        }
+        #resetBtn:hover { background: #D32F2F; }
         .mistake {
             background: #FFEBEE;
             border: 1px solid #FFCDD2;
@@ -141,23 +175,20 @@
 <body>
     <div class="container">
         <h1>歴史年号バトルRPG！150ステージ</h1>
-        
+       
         <div class="status">
             <div><span id="level">Lv.1</span> 歴史見習い</div>
             <div>コイン: <span id="coinCount">0</span></div>
             <div>累計正解: <span id="totalCorrect">0</span></div>
         </div>
-
         <div id="character">
             <div id="charaImg">⚔️</div>
             <div class="bubble" id="speech">よし！年号バトル、始めるぞ！</div>
         </div>
-
         <div id="quiz">
             <div id="question"></div>
             <div class="options" id="options"></div>
         </div>
-
         <div id="result">
             <h2>ステージクリア！</h2>
             <p id="accuracy"></p>
@@ -165,13 +196,14 @@
             <p id="coin"></p>
             <div id="mistakes"></div>
             <button id="nextSet">次のステージへ 年号バトル！</button>
+            <button id="gachaBtn">50コインでガチャを回す！</button>
+            <div id="gachaResult"></div>
         </div>
+        <button id="resetBtn">スコアリセット</button>
     </div>
-
     <!-- 音声 -->
     <audio id="correctSound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" preload="auto"></audio>
     <audio id="wrongSound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-399.mp3" preload="auto"></audio>
-
     <script>
         // === データ（150問フル） ===
         const questions = [
@@ -193,7 +225,7 @@
             { event: "太安万侶によって『古事記』がつくられる", year: 712, commentary: "天皇中心の神話・伝承をまとめた日本最古の歴史書。上中下3巻。" },
             { event: "舎人親王により『日本書紀』がつくられる", year: 720, commentary: "漢文で編纂された公式歴史書。神代から持統天皇まで30巻。" },
             { event: "三世一身法が制定される", year: 723, commentary: "開墾した田を3代まで私有を認める法。墾田永年私財法の前身。" },
-            { event: "全国に国分寺をつくる命令が出される", year: 741, commentary: "聖武天皇が盧遮那仏造立の詔と併せて発布。国家鎮護の仏教政策。" },
+            { event: "全国に国分寺をつくる命令が出される", year: 741, commentary: "聖武天皇が盧舎那仏造立の詔と併せて発布。国家鎮護の仏教政策。" },
             { event: "墾田永年私財法が制定される", year: 743, commentary: "開墾地を永代私有を認めた法。班田制が崩壊し、荘園が拡大。" },
             { event: "鑑真が都に来日する", year: 754, commentary: "6回目の挑戦で来日。東大寺で戒律を授け、日本律宗の祖。" },
             { event: "平安京に遷都する", year: 794, commentary: "桓武天皇が長岡京から遷都。平安時代の政治・文化の中心地。" },
@@ -325,7 +357,6 @@
             { event: "日中平和友好条約が結ばれる", year: 1978, commentary: "日中共同声明に続き平和条約。" },
             { event: "東西ドイツが統一される", year: 1990, commentary: "10月3日、ドイツ連邦共和国に統一。" }
         ];
-
         // === キャラデータ ===
         const characters = [
             { img: "⚔️", line: "塵も積もれば山となる" },
@@ -334,43 +365,55 @@
             { img: "🏯", line: "最後まで諦めるな！" },
             { img: "🐉", line: "You can do it!!" }
         ];
-
+        // === ガチャ景品 ===
+        const gachaItems = [
+            { name: "普通の帽子", rarity: "common" },
+            { name: "派手なネックレス", rarity: "common" },
+            { name: "キラキラブレスレット", rarity: "rare" },
+            { name: "おしゃれなアクセサリー", rarity: "legendary" }  // 目玉景品
+        ];
         // === 状態管理 ===
         let shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
-        let currentSet = parseInt(localStorage.getItem('currentSet') || '0');
-        let currentQuestionIndex = 0;
-        let correctAnswers = 0;
-        let mistakes = [];
-        let startTime;
-        let coins = parseInt(localStorage.getItem('historyCoins') || '0');
-        let totalCorrect = parseInt(localStorage.getItem('totalCorrect') || '0');
+let currentSet = parseInt(localStorage.getItem('currentSet') || '0');
+let currentQuestionIndex = 0;
+let correctAnswers = 0;
+let mistakes = [];
+let startTime;
+let coins = parseInt(localStorage.getItem('historyCoins') || '0');
+let totalCorrect = parseInt(localStorage.getItem('totalCorrect') || '0');
+const questionsPerSet = 5;   // 5問ごとに結果表示
+const totalSets = 30;        // 150問 ÷ 5 = 30ステージ
 
-        // === 初期表示 ===
-        updateStatus();
-        if (questions.length === 0) {
-            document.getElementById('question').textContent = '問題データ読み込みエラー。ページをリロードしてください。';
-        } else {
-            startSet();
-        }
+// === 初期表示 ===
+updateStatus();
+startSet();
 
-        // === 関数 ===
-        function updateStatus() {
-            const level = Math.floor(totalCorrect / 10) + 1;
-            const titles = ["見習い", "戦士", "武将", "大名", "征夷大将軍", "歴史王"];
-            document.getElementById('level').textContent = `Lv.${level}`;
-            document.getElementById('level').parentNode.children[0].textContent = titles[Math.min(level-1, 5)] || '歴史王';
-            document.getElementById('coinCount').textContent = coins;
-            document.getElementById('totalCorrect').textContent = totalCorrect;
-        }
+// === 関数 ===
+function updateStatus() {
+    const level = Math.floor(totalCorrect / 10) + 1;
+    const titles = ["見習い", "戦士", "武将", "大名", "征夷大将軍", "歴史王"];
+    const title = titles[Math.min(level - 1, 5)] || '歴史王';
 
+    // ここを修正（innerHTMLで全部消さないように個別に更新）
+    document.querySelector('.status > div:nth-child(1)').innerHTML = `<span id="level">Lv.${level}</span> ${title}`;
+    document.getElementById('coinCount').textContent = coins;
+    document.getElementById('totalCorrect').textContent = totalCorrect;
+    updateGachaButton();
+}
+
+function updateGachaButton() {
+    const btn = document.getElementById('gachaBtn');
+    btn.disabled = coins < 50;
+    btn.textContent = coins >= 50 ? '50コインでガチャを回す！' : 'コイン不足…';
+}
         function startSet() {
-            if (currentSet >= 15) {
+            if (currentSet >= totalSets) {
                 alert('全150ステージクリア！\nあなたは「歴史王」になりました！');
                 localStorage.removeItem('currentSet');
                 location.reload();
                 return;
             }
-            currentQuestionIndex = currentSet * 10;
+            currentQuestionIndex = currentSet * questionsPerSet;
             correctAnswers = 0;
             mistakes = [];
             startTime = new Date();
@@ -379,9 +422,8 @@
             document.getElementById('result').style.display = 'none';
             localStorage.setItem('currentSet', currentSet);
         }
-
         function showQuestion() {
-            if (currentQuestionIndex >= (currentSet + 1) * 10) {
+            if (currentQuestionIndex >= (currentSet + 1) * questionsPerSet) {
                 showResult();
                 return;
             }
@@ -389,8 +431,7 @@
             const chara = characters[Math.floor(Math.random() * characters.length)];
             document.getElementById('charaImg').textContent = chara.img;
             document.getElementById('speech').textContent = chara.line;
-            document.getElementById('question').textContent = `${currentQuestionIndex - currentSet * 10 + 1}/10: ${q.event}の年号は？`;
-
+            document.getElementById('question').textContent = `${currentQuestionIndex - currentSet * questionsPerSet + 1}/${questionsPerSet}: ${q.event}の年号は？`;
             const options = generateOptions(q.year);
             const container = document.getElementById('options');
             container.innerHTML = '';
@@ -402,7 +443,6 @@
                 container.appendChild(btn);
             });
         }
-
         function generateOptions(correct) {
             const set = new Set([correct]);
             while (set.size < 4) {
@@ -412,7 +452,6 @@
             }
             return [...set].sort(() => Math.random() - 0.5);
         }
-
         function handleAnswer(btn, selected, correct, commentary) {
             document.querySelectorAll('.option').forEach(b => b.disabled = true);
             const buttons = document.querySelectorAll('.option');
@@ -421,31 +460,30 @@
                 if (y === correct) b.classList.add('correct');
                 else if (y === selected) b.classList.add('wrong');
             });
-
             const correctAudio = document.getElementById('correctSound');
             const wrongAudio = document.getElementById('wrongSound');
+            let gainedCoins = 1;  // 最低1コイン
             if (selected == correct) {
                 correctAudio.currentTime = 0;
                 correctAudio.play().catch(e => console.log('音声再生エラー:', e));
                 correctAnswers++;
-                coins++;
                 totalCorrect++;
-                localStorage.setItem('historyCoins', coins);
-                localStorage.setItem('totalCorrect', totalCorrect);
-                updateStatus();
+                gainedCoins = 10;  // 正解で10コイン
                 celebrate();
             } else {
                 wrongAudio.currentTime = 0;
                 wrongAudio.play().catch(e => console.log('音声再生エラー:', e));
                 mistakes.push({ event: shuffledQuestions[currentQuestionIndex].event, yourAnswer: selected, correct, commentary });
             }
-
+            coins += gainedCoins;
+            localStorage.setItem('historyCoins', coins);
+            localStorage.setItem('totalCorrect', totalCorrect);
+            updateStatus();
             setTimeout(() => {
                 currentQuestionIndex++;
                 showQuestion();
             }, 1800);
         }
-
         function celebrate() {
             const canvas = document.createElement('canvas');
             canvas.width = window.innerWidth;
@@ -453,7 +491,6 @@
             canvas.style.cssText = 'position:fixed;top:0;left:0;pointer-events:none;z-index:1000;';
             document.body.appendChild(canvas);
             const ctx = canvas.getContext('2d');
-
             let particles = 40;
             const interval = setInterval(() => {
                 if (particles <= 0) {
@@ -471,18 +508,15 @@
                 particles--;
             }, 30);
         }
-
         function showResult() {
             const timeTaken = Math.floor((new Date() - startTime) / 1000);
-            const accuracy = (correctAnswers / 10 * 100).toFixed(0);
-            const gained = correctAnswers;
-
+            const accuracy = (correctAnswers / questionsPerSet * 100).toFixed(0);
+            const gained = correctAnswers * 10 + (questionsPerSet - correctAnswers) * 1;
             document.getElementById('quiz').style.display = 'none';
             document.getElementById('result').style.display = 'block';
-            document.getElementById('accuracy').textContent = `正解率: ${accuracy}%（${correctAnswers}/10）`;
+            document.getElementById('accuracy').textContent = `正解率: ${accuracy}%（${correctAnswers}/${questionsPerSet}）`;
             document.getElementById('time').textContent = `時間: ${Math.floor(timeTaken / 60)}分${timeTaken % 60}秒`;
             document.getElementById('coin').textContent = `+${gained}コインゲット！（合計: ${coins}）`;
-
             const mistakesDiv = document.getElementById('mistakes');
             mistakesDiv.innerHTML = '<h3>間違えた問題</h3>';
             if (mistakes.length === 0) {
@@ -506,9 +540,9 @@
                     mistakesDiv.appendChild(div);
                 });
             }
+            document.getElementById('gachaResult').textContent = '';
             updateStatus();
         }
-
         function saveRanking(name, score, time) {
             let rankings = JSON.parse(localStorage.getItem('historyRanking') || '[]');
             rankings.push({ name, score: parseInt(score), time, date: new Date().toLocaleDateString() });
@@ -516,10 +550,33 @@
             localStorage.setItem('historyRanking', JSON.stringify(rankings.slice(0, 5)));
             alert(`ランキング登録完了！\n${name} さん: ${score}% / ${time}秒`);
         }
-
         document.getElementById('nextSet').onclick = () => {
             currentSet++;
             startSet();
+        };
+        document.getElementById('gachaBtn').onclick = () => {
+            if (coins >= 50) {
+                coins -= 50;
+                localStorage.setItem('historyCoins', coins);
+                updateStatus();
+                const probabilities = { common: 0.7, rare: 0.25, legendary: 0.05 };
+                const rand = Math.random();
+                let rarity = 'common';
+                if (rand > 0.95) rarity = 'legendary';
+                else if (rand > 0.7) rarity = 'rare';
+                const items = gachaItems.filter(i => i.rarity === rarity);
+                const item = items[Math.floor(Math.random() * items.length)];
+                document.getElementById('gachaResult').textContent = `おめでとう！ ${item.name} をゲット！ (${rarity.toUpperCase()})`;
+            }
+        };
+        document.getElementById('resetBtn').onclick = () => {
+            if (confirm('スコアをリセットしますか？（コイン・正解数・ステージ進捗が全て消えます）')) {
+                localStorage.removeItem('historyCoins');
+                localStorage.removeItem('totalCorrect');
+                localStorage.removeItem('currentSet');
+                localStorage.removeItem('historyRanking');
+                location.reload();
+            }
         };
     </script>
 </body>
