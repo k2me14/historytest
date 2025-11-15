@@ -128,7 +128,7 @@
         }
         #nextSet:hover { background: #F57C00; transform: translateY(-2px); }
         #gachaBtn {
-            background: #9C27B0;
+            background: linear-gradient(135deg, #9C27B0, #E91E63);
             color: white;
             border: none;
             border-radius: 15px;
@@ -139,14 +139,149 @@
             display: block;
             font-weight: bold;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s;
         }
-        #gachaBtn:hover { background: #7B1FA2; transform: translateY(-2px); }
+        #gachaBtn:hover { 
+            background: linear-gradient(135deg, #7B1FA2, #C2185B);
+            transform: translateY(-2px) scale(1.05);
+        }
         #gachaBtn:disabled { background: #ccc; cursor: not-allowed; }
         #gachaResult {
-            font-size: 24px;
+            font-size: 28px;
             margin: 20px 0;
-            color: #4CAF50;
             font-weight: bold;
+            min-height: 40px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.5s;
+        }
+        #gachaResult.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+        #gachaResult.common { color: #9E9E9E; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        #gachaResult.rare { 
+            color: #2196F3; 
+            text-shadow: 0 0 10px rgba(33,150,243,0.5);
+            animation: glow 1.5s infinite;
+        }
+        #gachaResult.legendary { 
+            background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(255,215,0,0.8);
+            animation: rainbow 2s infinite, shake 0.5s;
+        }
+        @keyframes glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.5); }
+        }
+        @keyframes rainbow {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) scale(1); }
+            25% { transform: translateX(-10px) scale(1.05); }
+            75% { transform: translateX(10px) scale(1.05); }
+        }
+        .gacha-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .gacha-overlay.active {
+            display: flex;
+        }
+        .gacha-box {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(255,215,0,0.5);
+            animation: spin 1s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 80px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg) scale(0.5); opacity: 0; }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); opacity: 1; }
+        }
+        .gacha-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            transform: scale(0);
+            animation: cardPop 0.5s ease-out forwards;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        @keyframes cardPop {
+            0% { transform: scale(0) rotate(-180deg); }
+            70% { transform: scale(1.1) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        .gacha-card.common { border: 5px solid #9E9E9E; }
+        .gacha-card.rare { 
+            border: 5px solid #2196F3;
+            box-shadow: 0 20px 60px rgba(33,150,243,0.5);
+        }
+        .gacha-card.legendary { 
+            border: 5px solid #FFD700;
+            box-shadow: 0 20px 60px rgba(255,215,0,0.8);
+            animation: cardPop 0.5s ease-out forwards, legendaryGlow 2s infinite;
+        }
+        @keyframes legendaryGlow {
+            0%, 100% { box-shadow: 0 20px 60px rgba(255,215,0,0.8); }
+            50% { box-shadow: 0 20px 80px rgba(255,215,0,1), 0 0 40px rgba(255,215,0,0.6); }
+        }
+        .gacha-card-icon {
+            font-size: 100px;
+            margin: 20px 0;
+        }
+        .gacha-card-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .gacha-card-rarity {
+            font-size: 18px;
+            padding: 8px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .gacha-card-rarity.common { background: #9E9E9E; color: white; }
+        .gacha-card-rarity.rare { background: #2196F3; color: white; }
+        .gacha-card-rarity.legendary { 
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            color: #333;
+            font-weight: bold;
+        }
+        .gacha-close {
+            margin-top: 30px;
+            padding: 15px 40px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .gacha-close:hover {
+            background: #45a049;
         }
         #resetBtn {
             background: #F44336;
@@ -201,6 +336,12 @@
         </div>
         <button id="resetBtn">スコアリセット</button>
     </div>
+    
+    <!-- ガチャ演出オーバーレイ -->
+    <div class="gacha-overlay" id="gachaOverlay">
+        <div id="gachaAnimation"></div>
+    </div>
+    
 	<!-- ローカル音声ファイル（同じフォルダに置く！） -->
 	<audio id="correctSound" src="correct.mp3" preload="auto"></audio>
 	<audio id="wrongSound" src="wrong.mp3" preload="auto"></audio>
@@ -369,45 +510,48 @@
         ];
         // === ガチャ景品 ===
         const gachaItems = [
-            { name: "普通の帽子", rarity: "common" },
-            { name: "派手なネックレス", rarity: "common" },
-            { name: "キラキラブレスレット", rarity: "rare" },
-            { name: "おしゃれなアクセサリー", rarity: "legendary" }  // 目玉景品
+            { name: "普通の帽子", rarity: "common", icon: "🧢" },
+            { name: "派手なネックレス", rarity: "common", icon: "📿" },
+            { name: "古びた地図", rarity: "common", icon: "🗺️" },
+            { name: "キラキラブレスレット", rarity: "rare", icon: "💎" },
+            { name: "魔法の巻物", rarity: "rare", icon: "📜" },
+            { name: "伝説の剣", rarity: "legendary", icon: "⚔️" },
+            { name: "黄金の王冠", rarity: "legendary", icon: "👑" }
         ];
         // === 状態管理 ===
         let shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
-let currentSet = parseInt(localStorage.getItem('currentSet') || '0');
-let currentQuestionIndex = 0;
-let correctAnswers = 0;
-let mistakes = [];
-let startTime;
-let coins = parseInt(localStorage.getItem('historyCoins') || '0');
-let totalCorrect = parseInt(localStorage.getItem('totalCorrect') || '0');
-const questionsPerSet = 5;   // 5問ごとに結果表示
-const totalSets = 30;        // 150問 ÷ 5 = 30ステージ
+        let currentSet = parseInt(localStorage.getItem('currentSet') || '0');
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let mistakes = [];
+        let startTime;
+        let coins = parseInt(localStorage.getItem('historyCoins') || '0');
+        let totalCorrect = parseInt(localStorage.getItem('totalCorrect') || '0');
+        const questionsPerSet = 5;
+        const totalSets = 30;
 
-// === 初期表示 ===
-updateStatus();
-startSet();
+        // === 初期表示 ===
+        updateStatus();
+        startSet();
 
-// === 関数 ===
-function updateStatus() {
-    const level = Math.floor(totalCorrect / 10) + 1;
-    const titles = ["見習い", "戦士", "武将", "大名", "征夷大将軍", "歴史王"];
-    const title = titles[Math.min(level - 1, 5)] || '歴史王';
+        // === 関数 ===
+        function updateStatus() {
+            const level = Math.floor(totalCorrect / 10) + 1;
+            const titles = ["見習い", "戦士", "武将", "大名", "征夷大将軍", "歴史王"];
+            const title = titles[Math.min(level - 1, 5)] || '歴史王';
 
-    // ここを修正（innerHTMLで全部消さないように個別に更新）
-    document.querySelector('.status > div:nth-child(1)').innerHTML = `<span id="level">Lv.${level}</span> ${title}`;
-    document.getElementById('coinCount').textContent = coins;
-    document.getElementById('totalCorrect').textContent = totalCorrect;
-    updateGachaButton();
-}
+            document.querySelector('.status > div:nth-child(1)').innerHTML = `<span id="level">Lv.${level}</span> ${title}`;
+            document.getElementById('coinCount').textContent = coins;
+            document.getElementById('totalCorrect').textContent = totalCorrect;
+            updateGachaButton();
+        }
 
-function updateGachaButton() {
-    const btn = document.getElementById('gachaBtn');
-    btn.disabled = coins < 50;
-    btn.textContent = coins >= 50 ? '50コインでガチャを回す！' : 'コイン不足…';
-}
+        function updateGachaButton() {
+            const btn = document.getElementById('gachaBtn');
+            btn.disabled = coins < 50;
+            btn.textContent = coins >= 50 ? '50コインでガチャを回す！' : 'コイン不足…';
+        }
+        
         function startSet() {
             if (currentSet >= totalSets) {
                 alert('全150ステージクリア！\nあなたは「歴史王」になりました！');
@@ -424,6 +568,7 @@ function updateGachaButton() {
             document.getElementById('result').style.display = 'none';
             localStorage.setItem('currentSet', currentSet);
         }
+        
         function showQuestion() {
             if (currentQuestionIndex >= (currentSet + 1) * questionsPerSet) {
                 showResult();
@@ -445,6 +590,7 @@ function updateGachaButton() {
                 container.appendChild(btn);
             });
         }
+        
         function generateOptions(correct) {
             const set = new Set([correct]);
             while (set.size < 4) {
@@ -454,6 +600,7 @@ function updateGachaButton() {
             }
             return [...set].sort(() => Math.random() - 0.5);
         }
+        
         function handleAnswer(btn, selected, correct, commentary) {
             document.querySelectorAll('.option').forEach(b => b.disabled = true);
             const buttons = document.querySelectorAll('.option');
@@ -464,13 +611,13 @@ function updateGachaButton() {
             });
             const correctAudio = document.getElementById('correctSound');
             const wrongAudio = document.getElementById('wrongSound');
-            let gainedCoins = 1;  // 最低1コイン
+            let gainedCoins = 1;
             if (selected == correct) {
                 correctAudio.currentTime = 0;
                 correctAudio.play().catch(e => console.log('音声再生エラー:', e));
                 correctAnswers++;
                 totalCorrect++;
-                gainedCoins = 10;  // 正解で10コイン
+                gainedCoins = 10;
                 celebrate();
             } else {
                 wrongAudio.currentTime = 0;
@@ -486,6 +633,7 @@ function updateGachaButton() {
                 showQuestion();
             }, 1800);
         }
+        
         function celebrate() {
             const canvas = document.createElement('canvas');
             canvas.width = window.innerWidth;
@@ -510,6 +658,7 @@ function updateGachaButton() {
                 particles--;
             }, 30);
         }
+        
         function showResult() {
             const timeTaken = Math.floor((new Date() - startTime) / 1000);
             const accuracy = (correctAnswers / questionsPerSet * 100).toFixed(0);
@@ -543,8 +692,10 @@ function updateGachaButton() {
                 });
             }
             document.getElementById('gachaResult').textContent = '';
+            document.getElementById('gachaResult').className = '';
             updateStatus();
         }
+        
         function saveRanking(name, score, time) {
             let rankings = JSON.parse(localStorage.getItem('historyRanking') || '[]');
             rankings.push({ name, score: parseInt(score), time, date: new Date().toLocaleDateString() });
@@ -552,25 +703,122 @@ function updateGachaButton() {
             localStorage.setItem('historyRanking', JSON.stringify(rankings.slice(0, 5)));
             alert(`ランキング登録完了！\n${name} さん: ${score}% / ${time}秒`);
         }
+        
         document.getElementById('nextSet').onclick = () => {
             currentSet++;
             startSet();
         };
+        
         document.getElementById('gachaBtn').onclick = () => {
             if (coins >= 50) {
                 coins -= 50;
                 localStorage.setItem('historyCoins', coins);
                 updateStatus();
-                const probabilities = { common: 0.7, rare: 0.25, legendary: 0.05 };
-                const rand = Math.random();
-                let rarity = 'common';
-                if (rand > 0.95) rarity = 'legendary';
-                else if (rand > 0.7) rarity = 'rare';
-                const items = gachaItems.filter(i => i.rarity === rarity);
-                const item = items[Math.floor(Math.random() * items.length)];
-                document.getElementById('gachaResult').textContent = `おめでとう！ ${item.name} をゲット！ (${rarity.toUpperCase()})`;
+                
+                const overlay = document.getElementById('gachaOverlay');
+                const animation = document.getElementById('gachaAnimation');
+                
+                overlay.classList.add('active');
+                animation.innerHTML = '<div class="gacha-box">🎁</div>';
+                
+                const gachaAudio = document.getElementById('gachaSound');
+                gachaAudio.currentTime = 0;
+                gachaAudio.play().catch(e => console.log('音声再生エラー:', e));
+                
+                setTimeout(() => {
+                    const probabilities = { common: 0.7, rare: 0.25, legendary: 0.05 };
+                    const rand = Math.random();
+                    let rarity = 'common';
+                    if (rand > 0.95) rarity = 'legendary';
+                    else if (rand > 0.7) rarity = 'rare';
+                    
+                    const items = gachaItems.filter(i => i.rarity === rarity);
+                    const item = items[Math.floor(Math.random() * items.length)];
+                    
+                    if (rarity === 'legendary') {
+                        const legendaryAudio = document.getElementById('legendarySound');
+                        legendaryAudio.currentTime = 0;
+                        legendaryAudio.play().catch(e => console.log('音声再生エラー:', e));
+                        createLegendaryEffect();
+                    }
+                    
+                    const rarityText = {
+                        common: 'COMMON',
+                        rare: 'RARE ★★★',
+                        legendary: 'LEGENDARY ★★★★★'
+                    };
+                    
+                    animation.innerHTML = `
+                        <div class="gacha-card ${rarity}">
+                            <div class="gacha-card-icon">${item.icon}</div>
+                            <div class="gacha-card-name">${item.name}</div>
+                            <div class="gacha-card-rarity ${rarity}">${rarityText[rarity]}</div>
+                            <button class="gacha-close" onclick="closeGacha()">OK</button>
+                        </div>
+                    `;
+                    
+                    const resultDiv = document.getElementById('gachaResult');
+                    resultDiv.textContent = `${item.icon} ${item.name} をゲット！`;
+                    resultDiv.className = `show ${rarity}`;
+                }, 1200);
             }
         };
+        
+        function closeGacha() {
+            document.getElementById('gachaOverlay').classList.remove('active');
+        }
+        
+        function createLegendaryEffect() {
+            const canvas = document.createElement('canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.style.cssText = 'position:fixed;top:0;left:0;pointer-events:none;z-index:2001;';
+            document.body.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+            
+            let particles = [];
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    size: Math.random() * 8 + 2,
+                    hue: Math.random() * 60 + 30
+                });
+            }
+            
+            let frame = 0;
+            const animate = () => {
+                if (frame > 120) {
+                    canvas.remove();
+                    return;
+                }
+                
+                ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    
+                    ctx.fillStyle = `hsla(${p.hue}, 100%, 50%, ${1 - frame/120})`;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    if (Math.random() > 0.7) {
+                        ctx.fillStyle = `hsla(${p.hue}, 100%, 70%, ${1 - frame/120})`;
+                        ctx.fillText('✨', p.x - 10, p.y + 10);
+                    }
+                });
+                
+                frame++;
+                requestAnimationFrame(animate);
+            };
+            animate();
+        }
+        
         document.getElementById('resetBtn').onclick = () => {
             if (confirm('スコアをリセットしますか？（コイン・正解数・ステージ進捗が全て消えます）')) {
                 localStorage.removeItem('historyCoins');
