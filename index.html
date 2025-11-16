@@ -542,11 +542,11 @@
         // === キャラデータ ===
         // imgに画像ファイル名を指定（jpegやpngなど）、または絵文字
         const characters = [
-            { img: "aimu.png", line: "バズリュウムチェンジだー！", name: "アイムウ", isImage: true },
-            { img: "eru.png", line: "むずかしいけど頑張ってね", name: "六堂える", isImage: true },
-            { img: "himari.png", line: "ひまりも年号の勉強するよ！", name: "青空ひまり", isImage: true },
-            { img: "mituki.png", line: "最後まで諦めるな！", name: "星川みつき", isImage: true },
-            { img: "tumugi.png", line: "You can do it!!", name: "鈴風つむぎ", isImage: true },
+            { img: "character1.jpg", line: "塵も積もれば山となる", name: "剣士タケシ", isImage: true },
+            { img: "character2.png", line: "君に解けるかな？", name: "女王エリザベス", isImage: true },
+            { img: "character3.jpg", line: "やればできるよ", name: "魔法使いメルリン", isImage: true },
+            { img: "character4.png", line: "最後まで諦めるな！", name: "城主ノブナガ", isImage: true },
+            { img: "character5.jpg", line: "You can do it!!", name: "ドラゴンライダー", isImage: true },
             { img: "🥷", line: "影のように素早く答えよ", name: "忍者ハンゾウ", isImage: false },
             { img: "🧙", line: "知識こそ最強の武器", name: "賢者ソロモン", isImage: false },
             { img: "🦸", line: "歴史のヒーローになれ！", name: "ヒストリアン", isImage: false },
@@ -555,12 +555,13 @@
         ];
         // === ガチャ景品 ===
         const gachaItems = [
-            { name: "アイプリカード", rarity: "common", icon: "item1.png", isImage: true },
-            { name: "アイプリカード", rarity: "common", icon: "item2.png", isImage: true },
-            { name: "アイプリレアカード", rarity: "rare", icon: "item3.png", isImage: true },
-            { name: "アイプリレアカード", rarity: "rare", icon: "item4.png", isImage: true },
-            { name: "アイプリ超レアカード", rarity: "legendary", icon: "item_legendary1.png", isImage: true },
-            { name: "アイプリ超レアカード", rarity: "legendary", icon: "item_legendary2.png", isImage: true }
+            { name: "普通の帽子", rarity: "common", icon: "🧢", isImage: false },
+            { name: "派手なネックレス", rarity: "common", icon: "📿", isImage: false },
+            { name: "古びた地図", rarity: "common", icon: "🗺️", isImage: false },
+            { name: "キラキラブレスレット", rarity: "rare", icon: "💎", isImage: false },
+            { name: "魔法の巻物", rarity: "rare", icon: "📜", isImage: false },
+            { name: "伝説の剣", rarity: "legendary", icon: "item_legendary1.png", isImage: true },
+            { name: "黄金の王冠", rarity: "legendary", icon: "item_legendary2.png", isImage: true }
         ];
         // === 状態管理 ===
         let shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
@@ -650,6 +651,8 @@
             if (currentSet >= totalSets) {
                 alert('全150ステージクリア！\nあなたは「歴史王」になりました！');
                 localStorage.removeItem('currentSet');
+                currentSet = 0;
+                shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
                 location.reload();
                 return;
             }
@@ -657,10 +660,10 @@
             correctAnswers = 0;
             mistakes = [];
             startTime = new Date();
-            showQuestion();
             document.getElementById('quiz').style.display = 'block';
             document.getElementById('result').style.display = 'none';
             localStorage.setItem('currentSet', currentSet);
+            showQuestion();
         }
         
         function showQuestion() {
@@ -731,8 +734,12 @@
             localStorage.setItem('historyCoins', coins);
             localStorage.setItem('totalCorrect', totalCorrect);
             updateStatus();
+            
+            console.log(`回答後: currentQuestionIndex=${currentQuestionIndex}`);
+            
             setTimeout(() => {
                 currentQuestionIndex++;
+                console.log(`次の問題へ: currentQuestionIndex=${currentQuestionIndex}`);
                 showQuestion();
             }, 1800);
         }
@@ -851,22 +858,49 @@
                         legendary: 'LEGENDARY ★★★★★'
                     };
                     
-                    // アイコン表示（画像 or 絵文字）
-                    let iconHTML;
+                    // カード要素を作成
+                    const card = document.createElement('div');
+                    card.className = `gacha-card ${rarity}`;
+                    
+                    // アイコン部分
+                    const iconDiv = document.createElement('div');
+                    iconDiv.className = 'gacha-card-icon';
                     if (item.isImage) {
-                        iconHTML = `<img src="${item.icon}" alt="${item.name}" onerror="this.parentElement.textContent='🎁';">`;
+                        const img = document.createElement('img');
+                        img.src = item.icon;
+                        img.alt = item.name;
+                        img.onerror = function() {
+                            this.parentElement.textContent = '🎁';
+                        };
+                        iconDiv.appendChild(img);
                     } else {
-                        iconHTML = item.icon;
+                        iconDiv.textContent = item.icon;
                     }
                     
-                    animation.innerHTML = `
-                        <div class="gacha-card ${rarity}">
-                            <div class="gacha-card-icon">${iconHTML}</div>
-                            <div class="gacha-card-name">${item.name}</div>
-                            <div class="gacha-card-rarity ${rarity}">${rarityText[rarity]}</div>
-                            <button class="gacha-close" onclick="closeGacha()">OK</button>
-                        </div>
-                    `;
+                    // 名前部分
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'gacha-card-name';
+                    nameDiv.textContent = item.name;
+                    
+                    // レアリティ部分
+                    const rarityDiv = document.createElement('div');
+                    rarityDiv.className = `gacha-card-rarity ${rarity}`;
+                    rarityDiv.textContent = rarityText[rarity];
+                    
+                    // OKボタン
+                    const closeBtn = document.createElement('button');
+                    closeBtn.className = 'gacha-close';
+                    closeBtn.textContent = 'OK';
+                    closeBtn.onclick = closeGacha;
+                    
+                    // 全て組み立て
+                    card.appendChild(iconDiv);
+                    card.appendChild(nameDiv);
+                    card.appendChild(rarityDiv);
+                    card.appendChild(closeBtn);
+                    
+                    animation.innerHTML = '';
+                    animation.appendChild(card);
                     
                     const resultDiv = document.getElementById('gachaResult');
                     const resultIcon = item.isImage ? '🎁' : item.icon;
