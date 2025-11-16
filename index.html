@@ -383,6 +383,7 @@
 	<audio id="gachaSound" src="sound/gacha.mp3" preload="auto"></audio>
 	<audio id="legendarySound" src="sound/legendary.mp3" preload="auto"></audio>
 	<audio id="bgm" src="sound/bgm.mp3" preload="auto" loop></audio>
+	<audio id="bgm2" src="sound/bgm2.mp3" preload="auto" loop></audio>
 	
 	<!-- BGMコントロールボタン -->
 	<button id="bgmToggle" style="position:fixed;top:20px;right:20px;z-index:3000;background:#FF9800;color:white;border:none;border-radius:50%;width:60px;height:60px;font-size:24px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.3);">🔇</button>
@@ -593,6 +594,8 @@
         let totalCorrect = parseInt(localStorage.getItem('totalCorrect') || '0');
         const questionsPerSet = 5;
         const totalSets = 30;
+        let currentBGM = 'bgm';  // 現在再生中のBGM
+        let isBGMPlaying = false;
 
         // === 初期表示 ===
         updateStatus();
@@ -616,33 +619,42 @@
         // === BGM制御 ===
         function initBGM() {
             const bgm = document.getElementById('bgm');
+            const bgm2 = document.getElementById('bgm2');
             const bgmToggle = document.getElementById('bgmToggle');
-            let isPlaying = false;
             
             // 最初はミュート状態
-            bgm.volume = 0.3; // 音量30%
+            bgm.volume = 0.3;
+            bgm2.volume = 0.3;
             
             bgmToggle.onclick = () => {
-                if (isPlaying) {
-                    bgm.pause();
+                if (isBGMPlaying) {
+                    // 停止
+                    document.getElementById(currentBGM).pause();
                     bgmToggle.textContent = '🔇';
-                    isPlaying = false;
+                    isBGMPlaying = false;
                 } else {
-                    bgm.play().catch(e => {
+                    // 再生（レベルに応じたBGMを選択）
+                    const level = Math.floor(totalCorrect / 10) + 1;
+                    currentBGM = level >= 3 ? 'bgm2' : 'bgm';
+                    
+                    document.getElementById(currentBGM).play().catch(e => {
                         console.log('BGM再生エラー:', e);
                         alert('BGMを再生するにはページ上でクリックが必要です');
                     });
                     bgmToggle.textContent = '🔊';
-                    isPlaying = true;
+                    isBGMPlaying = true;
                 }
             };
             
             // 最初のクリックでBGM開始を促す
             document.body.addEventListener('click', function startBGM() {
-                if (!isPlaying) {
+                if (!isBGMPlaying) {
+                    const level = Math.floor(totalCorrect / 10) + 1;
+                    currentBGM = level >= 3 ? 'bgm2' : 'bgm';
+                    
                     bgmToggle.textContent = '🔊';
-                    bgm.play().catch(e => console.log('BGM再生エラー:', e));
-                    isPlaying = true;
+                    document.getElementById(currentBGM).play().catch(e => console.log('BGM再生エラー:', e));
+                    isBGMPlaying = true;
                 }
                 document.body.removeEventListener('click', startBGM);
             }, { once: true });
@@ -658,6 +670,30 @@
             document.getElementById('coinCount').textContent = coins;
             document.getElementById('totalCorrect').textContent = totalCorrect;
             updateGachaButton();
+            
+            // レベル3以上でBGM2に切り替え
+            checkAndChangeBGM(level);
+        }
+        
+        function checkAndChangeBGM(level) {
+            const shouldUseBGM2 = level >= 3;
+            const targetBGM = shouldUseBGM2 ? 'bgm2' : 'bgm';
+            
+            // BGMが変わる必要がある場合のみ切り替え
+            if (currentBGM !== targetBGM && isBGMPlaying) {
+                const oldBGM = document.getElementById(currentBGM);
+                const newBGM = document.getElementById(targetBGM);
+                
+                oldBGM.pause();
+                oldBGM.currentTime = 0;
+                
+                newBGM.volume = 0.3;
+                newBGM.play().catch(e => console.log('BGM切り替えエラー:', e));
+                
+                currentBGM = targetBGM;
+                
+                console.log(`BGM切り替え: Lv.${level} → ${targetBGM}`);
+            }
         }
 
         function updateGachaButton() {
