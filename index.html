@@ -542,11 +542,11 @@
         // === キャラデータ ===
         // imgに画像ファイル名を指定（jpegやpngなど）、または絵文字
         const characters = [
-            { img: "character1.jpg", line: "塵も積もれば山となる", name: "剣士タケシ", isImage: true },
-            { img: "character2.png", line: "君に解けるかな？", name: "女王エリザベス", isImage: true },
-            { img: "character3.jpg", line: "やればできるよ", name: "魔法使いメルリン", isImage: true },
-            { img: "character4.png", line: "最後まで諦めるな！", name: "城主ノブナガ", isImage: true },
-            { img: "character5.jpg", line: "You can do it!!", name: "ドラゴンライダー", isImage: true },
+            { img: "aimu.png", line: "バズリュウムチェンジだー！", name: "アイムウ", isImage: true },
+            { img: "eru.png", line: "むずかしいけど頑張ってね", name: "六堂える", isImage: true },
+            { img: "himari.png", line: "ひまりも年号の勉強するよ！", name: "青空ひまり", isImage: true },
+            { img: "mituki.png", line: "最後まで諦めるな！", name: "星川みつき", isImage: true },
+            { img: "tumugi.png", line: "You can do it!!", name: "鈴風つむぎ", isImage: true },
             { img: "🥷", line: "影のように素早く答えよ", name: "忍者ハンゾウ", isImage: false },
             { img: "🧙", line: "知識こそ最強の武器", name: "賢者ソロモン", isImage: false },
             { img: "🦸", line: "歴史のヒーローになれ！", name: "ヒストリアン", isImage: false },
@@ -555,13 +555,12 @@
         ];
         // === ガチャ景品 ===
         const gachaItems = [
-            { name: "普通の帽子", rarity: "common", icon: "🧢", isImage: false },
-            { name: "派手なネックレス", rarity: "common", icon: "📿", isImage: false },
-            { name: "古びた地図", rarity: "common", icon: "🗺️", isImage: false },
-            { name: "キラキラブレスレット", rarity: "rare", icon: "💎", isImage: false },
-            { name: "魔法の巻物", rarity: "rare", icon: "📜", isImage: false },
-            { name: "伝説の剣", rarity: "legendary", icon: "item_legendary1.png", isImage: true },
-            { name: "黄金の王冠", rarity: "legendary", icon: "item_legendary2.png", isImage: true }
+            { name: "アイプリカード", rarity: "common", icon: "item1.png", isImage: true },
+            { name: "アイプリカード", rarity: "common", icon: "item2.png", isImage: true },
+            { name: "アイプリレアカード", rarity: "rare", icon: "item3.png", isImage: true },
+            { name: "アイプリレアカード", rarity: "rare", icon: "item4.png", isImage: true },
+            { name: "アイプリ超レアカード", rarity: "legendary", icon: "item_legendary1.png", isImage: true },
+            { name: "アイプリ超レアカード", rarity: "legendary", icon: "item_legendary2.png", isImage: true }
         ];
         // === 状態管理 ===
         let shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
