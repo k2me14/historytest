@@ -554,14 +554,34 @@
             { img: "🌟", line: "きみの輝きを見せて！", name: "スターライト", isImage: false }
         ];
         // === ガチャ景品 ===
-        const gachaItems = [
-            { name: "アイプリカード", rarity: "common", icon: "item1.png", isImage: true },
-            { name: "アイプリカード", rarity: "common", icon: "item2.png", isImage: true },
-            { name: "アイプリレアカード", rarity: "rare", icon: "item3.png", isImage: true },
-            { name: "アイプリレアカード", rarity: "rare", icon: "item4.png", isImage: true },
-            { name: "アイプリ超レアカード", rarity: "legendary", icon: "item_legendary1.png", isImage: true },
-            { name: "アイプリ超レアカード", rarity: "legendary", icon: "item_legendary2.png", isImage: true }
-        ];
+        // 各レアリティフォルダ内の画像枚数を指定
+        const gachaConfig = {
+            common: {
+                count: 3,  // commonフォルダ内のPNG画像数
+                folder: 'common'
+            },
+            rare: {
+                count: 3,   // rareフォルダ内のPNG画像数
+                folder: 'rare'
+            },
+            legendary: {
+                count: 6,   // legendaryフォルダ内のPNG画像数
+                folder: 'legendary'
+            }
+        };
+        
+        // ガチャアイテム名のリスト（ランダムで使用）
+        const itemNames = {
+            common: [
+                "アイプリカード"
+            ],
+            rare: [
+                "アイプリレアカード"
+            ],
+            legendary: [
+                "アイプリ超レアカード！"
+            ]
+        };
         // === 状態管理 ===
         let shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
         let currentSet = parseInt(localStorage.getItem('currentSet') || '0');
@@ -642,8 +662,8 @@
 
         function updateGachaButton() {
             const btn = document.getElementById('gachaBtn');
-            btn.disabled = coins < 50;
-            btn.textContent = coins >= 50 ? '50コインでガチャを回す！' : 'コイン不足…';
+            btn.disabled = coins < 30;
+            btn.textContent = coins >= 30 ? '30コインでガチャを回す！' : 'コイン不足…';
         }
         
         function startSet() {
@@ -819,8 +839,8 @@
         };
         
         document.getElementById('gachaBtn').onclick = () => {
-            if (coins >= 50) {
-                coins -= 50;
+            if (coins >= 30) {
+                coins -= 30;
                 localStorage.setItem('historyCoins', coins);
                 updateStatus();
                 
@@ -835,14 +855,21 @@
                 gachaAudio.play().catch(e => console.log('音声再生エラー:', e));
                 
                 setTimeout(() => {
-                    const probabilities = { common: 0.7, rare: 0.25, legendary: 0.05 };
+                    // レアリティ抽選
                     const rand = Math.random();
                     let rarity = 'common';
-                    if (rand > 0.95) rarity = 'legendary';
-                    else if (rand > 0.7) rarity = 'rare';
+                    if (rand > 0.8) rarity = 'legendary';  // 5%
+                    else if (rand > 0.5) rarity = 'rare';   // 25%
+                    // 残り70%がcommon
                     
-                    const items = gachaItems.filter(i => i.rarity === rarity);
-                    const item = items[Math.floor(Math.random() * items.length)];
+                    // 画像番号をランダム選択（1から始まる）
+                    const config = gachaConfig[rarity];
+                    const imageNumber = Math.floor(Math.random() * config.count) + 1;
+                    const imagePath = `${config.folder}/${imageNumber}.png`;
+                    
+                    // アイテム名をランダム選択
+                    const names = itemNames[rarity];
+                    const itemName = names[Math.floor(Math.random() * names.length)];
                     
                     if (rarity === 'legendary') {
                         const legendaryAudio = document.getElementById('legendarySound');
@@ -864,22 +891,24 @@
                     // アイコン部分
                     const iconDiv = document.createElement('div');
                     iconDiv.className = 'gacha-card-icon';
-                    if (item.isImage) {
-                        const img = document.createElement('img');
-                        img.src = item.icon;
-                        img.alt = item.name;
-                        img.onerror = function() {
-                            this.parentElement.textContent = '🎁';
+                    const img = document.createElement('img');
+                    img.src = imagePath;
+                    img.alt = itemName;
+                    img.onerror = function() {
+                        // 画像読み込み失敗時はレアリティに応じた絵文字
+                        const fallbackEmoji = {
+                            common: '📦',
+                            rare: '💎',
+                            legendary: '👑'
                         };
-                        iconDiv.appendChild(img);
-                    } else {
-                        iconDiv.textContent = item.icon;
-                    }
+                        this.parentElement.textContent = fallbackEmoji[rarity];
+                    };
+                    iconDiv.appendChild(img);
                     
                     // 名前部分
                     const nameDiv = document.createElement('div');
                     nameDiv.className = 'gacha-card-name';
-                    nameDiv.textContent = item.name;
+                    nameDiv.textContent = itemName;
                     
                     // レアリティ部分
                     const rarityDiv = document.createElement('div');
@@ -902,8 +931,7 @@
                     animation.appendChild(card);
                     
                     const resultDiv = document.getElementById('gachaResult');
-                    const resultIcon = item.isImage ? '🎁' : item.icon;
-                    resultDiv.textContent = `${resultIcon} ${item.name} をゲット！`;
+                    resultDiv.textContent = `🎁 ${itemName} をゲット！`;
                     resultDiv.className = `show ${rarity}`;
                 }, 1200);
             }
