@@ -377,12 +377,12 @@
         <div id="gachaAnimation"></div>
     </div>
     
-	<!-- ローカル音声ファイル（同じフォルダに置く！） -->
-	<audio id="correctSound" src="correct.mp3" preload="auto"></audio>
-	<audio id="wrongSound" src="wrong.mp3" preload="auto"></audio>
-	<audio id="gachaSound" src="gacha.mp3" preload="auto"></audio>
-	<audio id="legendarySound" src="legendary.mp3" preload="auto"></audio>
-	<audio id="bgm" src="bgm.mp3" preload="auto" loop></audio>
+	<!-- ローカル音声ファイル（soundフォルダに配置） -->
+	<audio id="correctSound" src="sound/correct.mp3" preload="auto"></audio>
+	<audio id="wrongSound" src="sound/wrong.mp3" preload="auto"></audio>
+	<audio id="gachaSound" src="sound/gacha.mp3" preload="auto"></audio>
+	<audio id="legendarySound" src="sound/legendary.mp3" preload="auto"></audio>
+	<audio id="bgm" src="sound/bgm.mp3" preload="auto" loop></audio>
 	
 	<!-- BGMコントロールボタン -->
 	<button id="bgmToggle" style="position:fixed;top:20px;right:20px;z-index:3000;background:#FF9800;color:white;border:none;border-radius:50%;width:60px;height:60px;font-size:24px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.3);">🔇</button>
@@ -561,7 +561,7 @@
                 folder: 'common'
             },
             rare: {
-                count: 3,   // rareフォルダ内のPNG画像数
+                count: 5,   // rareフォルダ内のPNG画像数
                 folder: 'rare'
             },
             legendary: {
@@ -858,9 +858,9 @@
                     // レアリティ抽選
                     const rand = Math.random();
                     let rarity = 'common';
-                    if (rand > 0.8) rarity = 'legendary';  // 5%
-                    else if (rand > 0.5) rarity = 'rare';   // 25%
-                    // 残り70%がcommon
+                    if (rand > 0.85) rarity = 'legendary';  // 15%
+                    else if (rand > 0.5) rarity = 'rare';   // 35%
+                    // 残り50%がcommon
                     
                     // 画像番号をランダム選択（1から始まる）
                     const config = gachaConfig[rarity];
