@@ -50,6 +50,27 @@
         #charaImg {
             font-size: 60px;
             animation: bounce 2s infinite;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        #charaImg img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            object-fit: cover;
+            border: 4px solid #FFD700;
+        }
+        #charaName {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+            font-weight: bold;
         }
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
@@ -249,6 +270,19 @@
         .gacha-card-icon {
             font-size: 100px;
             margin: 20px 0;
+            width: 150px;
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .gacha-card-icon img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
         }
         .gacha-card-name {
             font-size: 28px;
@@ -317,7 +351,8 @@
             <div>累計正解: <span id="totalCorrect">0</span></div>
         </div>
         <div id="character">
-            <div id="charaImg">⚔️</div>
+            <div id="charaImg"></div>
+            <div id="charaName">剣士タケシ</div>
             <div class="bubble" id="speech">よし！年号バトル、始めるぞ！</div>
         </div>
         <div id="quiz">
@@ -347,6 +382,10 @@
 	<audio id="wrongSound" src="wrong.mp3" preload="auto"></audio>
 	<audio id="gachaSound" src="gacha.mp3" preload="auto"></audio>
 	<audio id="legendarySound" src="legendary.mp3" preload="auto"></audio>
+	<audio id="bgm" src="bgm.mp3" preload="auto" loop></audio>
+	
+	<!-- BGMコントロールボタン -->
+	<button id="bgmToggle" style="position:fixed;top:20px;right:20px;z-index:3000;background:#FF9800;color:white;border:none;border-radius:50%;width:60px;height:60px;font-size:24px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.3);">🔇</button>
     <script>
         // === データ（150問フル） ===
         const questions = [
@@ -501,22 +540,27 @@
             { event: "東西ドイツが統一される", year: 1990, commentary: "10月3日、ドイツ連邦共和国に統一。" }
         ];
         // === キャラデータ ===
+        // imgに画像ファイル名を指定（jpegやpngなど）、または絵文字
         const characters = [
-            { img: "⚔️", line: "塵も積もれば山となる" },
-            { img: "👑", line: "君に解けるかな？" },
-            { img: "🔮", line: "やればできるよ" },
-            { img: "🏯", line: "最後まで諦めるな！" },
-            { img: "🐉", line: "You can do it!!" }
+            { img: "aimu.png", line: "バズリュウムチェンジだー！", name: "アイムウ", isImage: true },
+            { img: "eru.png", line: "むずかしいけど頑張ってね", name: "六堂える", isImage: true },
+            { img: "himari.png", line: "ひまりも年号の勉強するよ！", name: "青空ひまり", isImage: true },
+            { img: "mituki.png", line: "最後まで諦めるな！", name: "星川みつき", isImage: true },
+            { img: "tumugi.png", line: "You can do it!!", name: "鈴風つむぎ", isImage: true },
+            { img: "🥷", line: "影のように素早く答えよ", name: "忍者ハンゾウ", isImage: false },
+            { img: "🧙", line: "知識こそ最強の武器", name: "賢者ソロモン", isImage: false },
+            { img: "🦸", line: "歴史のヒーローになれ！", name: "ヒストリアン", isImage: false },
+            { img: "🎓", line: "学ぶことに終わりはない", name: "教授クレア", isImage: false },
+            { img: "🌟", line: "きみの輝きを見せて！", name: "スターライト", isImage: false }
         ];
         // === ガチャ景品 ===
         const gachaItems = [
-            { name: "普通の帽子", rarity: "common", icon: "🧢" },
-            { name: "派手なネックレス", rarity: "common", icon: "📿" },
-            { name: "古びた地図", rarity: "common", icon: "🗺️" },
-            { name: "キラキラブレスレット", rarity: "rare", icon: "💎" },
-            { name: "魔法の巻物", rarity: "rare", icon: "📜" },
-            { name: "伝説の剣", rarity: "legendary", icon: "⚔️" },
-            { name: "黄金の王冠", rarity: "legendary", icon: "👑" }
+            { name: "アイプリカード", rarity: "common", icon: "item1.png", isImage: true },
+            { name: "アイプリカード", rarity: "common", icon: "item2.png", isImage: true },
+            { name: "アイプリレアカード", rarity: "rare", icon: "item3.png", isImage: true },
+            { name: "アイプリレアカード", rarity: "rare", icon: "item4.png", isImage: true },
+            { name: "アイプリ超レアカード", rarity: "legendary", icon: "item_legendary1.png", isImage: true },
+            { name: "アイプリ超レアカード", rarity: "legendary", icon: "item_legendary2.png", isImage: true }
         ];
         // === 状態管理 ===
         let shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
@@ -532,7 +576,57 @@
 
         // === 初期表示 ===
         updateStatus();
+        initCharacter();
         startSet();
+        initBGM();
+
+        // === 初期キャラクター表示 ===
+        function initCharacter() {
+            const chara = characters[0]; // 最初のキャラクター
+            const charaImgDiv = document.getElementById('charaImg');
+            if (chara.isImage) {
+                charaImgDiv.innerHTML = `<img src="${chara.img}" alt="${chara.name}" onerror="this.style.display='none'; this.parentElement.textContent='❓';">`;
+            } else {
+                charaImgDiv.textContent = chara.img;
+            }
+            document.getElementById('charaName').textContent = chara.name;
+            document.getElementById('speech').textContent = chara.line;
+        }
+
+        // === BGM制御 ===
+        function initBGM() {
+            const bgm = document.getElementById('bgm');
+            const bgmToggle = document.getElementById('bgmToggle');
+            let isPlaying = false;
+            
+            // 最初はミュート状態
+            bgm.volume = 0.3; // 音量30%
+            
+            bgmToggle.onclick = () => {
+                if (isPlaying) {
+                    bgm.pause();
+                    bgmToggle.textContent = '🔇';
+                    isPlaying = false;
+                } else {
+                    bgm.play().catch(e => {
+                        console.log('BGM再生エラー:', e);
+                        alert('BGMを再生するにはページ上でクリックが必要です');
+                    });
+                    bgmToggle.textContent = '🔊';
+                    isPlaying = true;
+                }
+            };
+            
+            // 最初のクリックでBGM開始を促す
+            document.body.addEventListener('click', function startBGM() {
+                if (!isPlaying) {
+                    bgmToggle.textContent = '🔊';
+                    bgm.play().catch(e => console.log('BGM再生エラー:', e));
+                    isPlaying = true;
+                }
+                document.body.removeEventListener('click', startBGM);
+            }, { once: true });
+        }
 
         // === 関数 ===
         function updateStatus() {
@@ -576,7 +670,16 @@
             }
             const q = shuffledQuestions[currentQuestionIndex];
             const chara = characters[Math.floor(Math.random() * characters.length)];
-            document.getElementById('charaImg').textContent = chara.img;
+            
+            // キャラクター表示（画像 or 絵文字）
+            const charaImgDiv = document.getElementById('charaImg');
+            if (chara.isImage) {
+                charaImgDiv.innerHTML = `<img src="${chara.img}" alt="${chara.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='❓';">`;
+            } else {
+                charaImgDiv.textContent = chara.img;
+            }
+            
+            document.getElementById('charaName').textContent = chara.name;
             document.getElementById('speech').textContent = chara.line;
             document.getElementById('question').textContent = `${currentQuestionIndex - currentSet * questionsPerSet + 1}/${questionsPerSet}: ${q.event}の年号は？`;
             const options = generateOptions(q.year);
@@ -748,9 +851,17 @@
                         legendary: 'LEGENDARY ★★★★★'
                     };
                     
+                    // アイコン表示（画像 or 絵文字）
+                    let iconHTML;
+                    if (item.isImage) {
+                        iconHTML = `<img src="${item.icon}" alt="${item.name}" onerror="this.parentElement.textContent='🎁';">`;
+                    } else {
+                        iconHTML = item.icon;
+                    }
+                    
                     animation.innerHTML = `
                         <div class="gacha-card ${rarity}">
-                            <div class="gacha-card-icon">${item.icon}</div>
+                            <div class="gacha-card-icon">${iconHTML}</div>
                             <div class="gacha-card-name">${item.name}</div>
                             <div class="gacha-card-rarity ${rarity}">${rarityText[rarity]}</div>
                             <button class="gacha-close" onclick="closeGacha()">OK</button>
@@ -758,7 +869,8 @@
                     `;
                     
                     const resultDiv = document.getElementById('gachaResult');
-                    resultDiv.textContent = `${item.icon} ${item.name} をゲット！`;
+                    const resultIcon = item.isImage ? '🎁' : item.icon;
+                    resultDiv.textContent = `${resultIcon} ${item.name} をゲット！`;
                     resultDiv.className = `show ${rarity}`;
                 }, 1200);
             }
