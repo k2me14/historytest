@@ -366,7 +366,7 @@
             <p id="coin"></p>
             <div id="mistakes"></div>
             <button id="nextSet">次のステージへ 年号バトル！</button>
-            <button id="gachaBtn">50コインでガチャを回す！</button>
+            <button id="gachaBtn">30コインでガチャを回す！</button>
             <div id="gachaResult"></div>
         </div>
         <button id="resetBtn">スコアリセット</button>
@@ -543,16 +543,16 @@
         // === キャラデータ ===
         // imgに画像ファイル名を指定（jpegやpngなど）、または絵文字
         const characters = [
-            { img: "aimu.png", line: "バズリュウムチェンジだー！", name: "アイムウ", isImage: true },
-            { img: "eru.png", line: "むずかしいけど頑張ってね", name: "六堂える", isImage: true },
-            { img: "himari.png", line: "ひまりも年号の勉強するよ！", name: "青空ひまり", isImage: true },
-            { img: "mituki.png", line: "最後まで諦めるな！", name: "星川みつき", isImage: true },
-            { img: "tumugi.png", line: "You can do it!!", name: "鈴風つむぎ", isImage: true },
-            { img: "🥷", line: "影のように素早く答えよ", name: "忍者ハンゾウ", isImage: false },
-            { img: "🧙", line: "知識こそ最強の武器", name: "賢者ソロモン", isImage: false },
-            { img: "🦸", line: "歴史のヒーローになれ！", name: "ヒストリアン", isImage: false },
-            { img: "🎓", line: "学ぶことに終わりはない", name: "教授クレア", isImage: false },
-            { img: "🌟", line: "きみの輝きを見せて！", name: "スターライト", isImage: false }
+            { img: "aimu.png", line: "継続は力なり", name: "アイムウ", isImage: true },
+            { img: "eru.png", line: "千里の道も一歩から", name: "六堂える", isImage: true },
+            { img: "himari.png", line: "学問に王道なし", name: "青空ひまり", isImage: true },
+            { img: "mituki.png", line: "為せば成る", name: "星川みつき", isImage: true },
+            { img: "tumugi.png", line: "知識は力なり", name: "鈴風つむぎ", isImage: true },
+            { img: "🥷", line: "急がば回れ", name: "忍者ハンゾウ", isImage: false },
+            { img: "🧙", line: "学べば学ぶほど、自分が無知であることに気づく", name: "賢者ソロモン", isImage: false },
+            { img: "🦸", line: "失敗は成功のもと", name: "ヒストリアン", isImage: false },
+            { img: "🎓", line: "温故知新", name: "教授クレア", isImage: false },
+            { img: "🌟", line: "努力に勝る天才なし", name: "スターライト", isImage: false }
         ];
         // === ガチャ景品 ===
         // 各レアリティフォルダ内の画像枚数を指定
@@ -562,11 +562,11 @@
                 folder: 'common'
             },
             rare: {
-                count: 5,   // rareフォルダ内のPNG画像数
+                count: 8,   // rareフォルダ内のPNG画像数
                 folder: 'rare'
             },
             legendary: {
-                count: 6,   // legendaryフォルダ内のPNG画像数
+                count: 10,   // legendaryフォルダ内のPNG画像数
                 folder: 'legendary'
             }
         };
@@ -624,7 +624,7 @@
             
             // 最初はミュート状態
             bgm.volume = 0.3;
-            bgm2.volume = 0.3;
+            bgm2.volume = 0.9;
             
             bgmToggle.onclick = () => {
                 if (isBGMPlaying) {
@@ -772,7 +772,7 @@
             });
             const correctAudio = document.getElementById('correctSound');
             const wrongAudio = document.getElementById('wrongSound');
-            let gainedCoins = 1;
+            let gainedCoins = 0; //デバック
             if (selected == correct) {
                 correctAudio.currentTime = 0;
                 correctAudio.play().catch(e => console.log('音声再生エラー:', e));
@@ -827,7 +827,8 @@
         function showResult() {
             const timeTaken = Math.floor((new Date() - startTime) / 1000);
             const accuracy = (correctAnswers / questionsPerSet * 100).toFixed(0);
-            const gained = correctAnswers * 10 + (questionsPerSet - correctAnswers) * 1;
+            const gained = correctAnswers * 10;
+            //const gained = correctAnswers * 10 + (questionsPerSet - correctAnswers) * 1;
             document.getElementById('quiz').style.display = 'none';
             document.getElementById('result').style.display = 'block';
             document.getElementById('accuracy').textContent = `正解率: ${accuracy}%（${correctAnswers}/${questionsPerSet}）`;
